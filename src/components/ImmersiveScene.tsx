@@ -25,8 +25,8 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
     const accent = mode === 'industrial' ? 0x83c9ff : 0xff704c;
     const accentSoft = mode === 'industrial' ? 0x3d9ee8 : 0xf04d2f;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
-    camera.position.set(3.65, 2.65, 7.6);
+    const camera = new THREE.PerspectiveCamera(33, 1, 0.1, 80);
+    camera.position.set(3.1, 2.2, 6.4);
     camera.lookAt(0.15, -0.05, 0);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -34,32 +34,36 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
     renderer.setClearColor(0x080b0f, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 1.36;
     renderer.domElement.setAttribute('aria-hidden', 'true');
     renderer.domElement.className = 'immersive-canvas';
     element.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xbddfff, 0x10151b, 2.05));
-    const keyLight = new THREE.DirectionalLight(0xe4f2ff, 3.2);
+    scene.add(new THREE.HemisphereLight(0xd8ecff, 0x151b23, 2.6));
+    const keyLight = new THREE.DirectionalLight(0xf0f6ff, 4.2);
     keyLight.position.set(-2, 6, 5);
     scene.add(keyLight);
-    const blueLight = new THREE.PointLight(0x379dff, 26, 12);
+    const blueLight = new THREE.PointLight(0x379dff, 38, 13);
     blueLight.position.set(-2, 1.7, -2);
     scene.add(blueLight);
-    const amberLight = new THREE.PointLight(accent, 15, 8);
+    const amberLight = new THREE.PointLight(accent, 24, 9);
     amberLight.position.set(2.6, 1, 3);
     scene.add(amberLight);
+    const rimLight = new THREE.PointLight(0xe1f3ff, 18, 8);
+    rimLight.position.set(2.4, 1.2, -2.5);
+    scene.add(rimLight);
 
-    const darkMetal = new THREE.MeshStandardMaterial({ color: 0x202b35, metalness: 0.88, roughness: 0.28 });
-    const frameMetal = new THREE.MeshStandardMaterial({ color: 0x394754, metalness: 0.83, roughness: 0.34 });
+    const darkMetal = new THREE.MeshStandardMaterial({ color: 0x465462, metalness: 0.62, roughness: 0.29 });
+    const frameMetal = new THREE.MeshStandardMaterial({ color: 0x61788a, metalness: 0.6, roughness: 0.33 });
     const rubber = new THREE.MeshStandardMaterial({ color: 0x080c10, metalness: 0.15, roughness: 0.8 });
-    const darkPanel = new THREE.MeshStandardMaterial({ color: 0x111920, metalness: 0.65, roughness: 0.38 });
-    const accentMetal = new THREE.MeshStandardMaterial({ color: accentSoft, metalness: 0.52, roughness: 0.31, emissive: accent, emissiveIntensity: 0.12 });
+    const darkPanel = new THREE.MeshStandardMaterial({ color: 0x243544, metalness: 0.52, roughness: 0.34 });
+    const accentMetal = new THREE.MeshStandardMaterial({ color: accentSoft, metalness: 0.52, roughness: 0.31, emissive: accent, emissiveIntensity: 0.28 });
     const glow = new THREE.MeshBasicMaterial({ color: accent });
     const glass = new THREE.MeshPhysicalMaterial({ color: 0x10283b, metalness: 0.3, roughness: 0.1, transmission: 0.22, emissive: 0x0b4f7a, emissiveIntensity: 0.38 });
 
     const rig = new THREE.Group();
     rig.position.set(0.1, -0.2, 0);
+    rig.scale.setScalar(1.28);
     scene.add(rig);
 
     // A small but mechanically plausible tracked inspection / response robot.
@@ -206,8 +210,8 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
         motor.rotation.x = Math.sin(t * 0.33) * 0.018;
         particles.rotation.y = t * 0.008;
       }
-      camera.position.x += (3.65 + pointer.x * 0.14 - camera.position.x) * 0.025;
-      camera.position.y += (2.65 - pointer.y * 0.08 - camera.position.y) * 0.025;
+      camera.position.x += (3.1 + pointer.x * 0.16 - camera.position.x) * 0.025;
+      camera.position.y += (2.2 - pointer.y * 0.08 - camera.position.y) * 0.025;
       camera.lookAt(0.15, -0.05, 0);
       renderer.render(scene, camera);
       frame = window.requestAnimationFrame(animate);
