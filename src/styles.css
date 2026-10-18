@@ -63,8 +63,8 @@
 .hero.immersive-home .hero-content{z-index:5;max-width:1390px;width:100%;align-items:center;min-height:670px}
 .hero.immersive-home .hero-copy{max-width:680px;position:relative;z-index:6;pointer-events:auto}
 .hero.immersive-home .hero-copy>.kicker{color:#bac8d6}
-.hero.immersive-home .hero h1{font-size:clamp(64px,8vw,124px);letter-spacing:-.085em;line-height:.91;margin:31px 0 26px;text-shadow:0 8px 55px rgba(0,0,0,.4)}
-.hero.immersive-home .hero h1 span{color:#96a8ba;background:linear-gradient(100deg,#f1f6fb 0%,#93a9bd 43%,#506d85 100%);color:transparent;background-clip:text;-webkit-background-clip:text}
+.hero.immersive-home h1{font-size:clamp(64px,8vw,124px);letter-spacing:-.085em;line-height:.91;margin:31px 0 26px;text-shadow:0 8px 55px rgba(0,0,0,.4)}
+.hero.immersive-home h1 span{color:#96a8ba;background:linear-gradient(100deg,#f1f6fb 0%,#93a9bd 43%,#506d85 100%);color:transparent;background-clip:text;-webkit-background-clip:text}
 .hero.immersive-home .hero-lede{max-width:520px;font-size:15px;line-height:1.9;color:#c0cad5}
 .hero-overline{display:flex;gap:10px;align-items:center;margin-top:30px;font:9px var(--mono);letter-spacing:.12em;color:var(--accent,var(--blue))}
 .overline-divider{width:26px;height:1px;background:rgba(218,232,245,.25);margin:0 2px}
@@ -154,7 +154,7 @@
  .hero.immersive-home{padding-top:80px;padding-bottom:80px;min-height:860px}
  .hero.immersive-home .hero-content{min-height:690px;align-items:center}
  .hero.immersive-home .hero-copy{max-width:640px}
- .hero.immersive-home .hero h1{font-size:clamp(64px,9.5vw,96px)}
+ .hero.immersive-home h1{font-size:clamp(64px,9.5vw,96px)}
  .hero.immersive-home .immersive-scene{width:80%;right:-10%}
  .hero.immersive-home .hero-side-note{display:none}
  .hero-corner-left{left:6%}.hero-corner-right{right:6%}
@@ -166,7 +166,7 @@
  .hero.immersive-home{padding:80px 6% 72px;min-height:900px;min-height:max(900px,calc(100svh - 68px))}
  .hero.immersive-home .hero-content{min-height:710px;align-items:flex-start}
  .hero.immersive-home .hero-copy{padding-top:50px;width:100%;max-width:600px}
- .hero.immersive-home .hero h1{font-size:clamp(54px,12.8vw,80px);margin:24px 0 20px}
+ .hero.immersive-home h1{font-size:clamp(54px,12.8vw,80px);margin:24px 0 20px}
  .hero.immersive-home .hero-lede{font-size:12px;line-height:1.8;max-width:430px}
  .hero.immersive-home .hero-overline{font-size:7px;letter-spacing:.06em;margin-top:23px}
  .hero-feature-line{margin-top:22px;gap:10px;padding:10px 0}
