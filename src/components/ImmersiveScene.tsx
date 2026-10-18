@@ -96,6 +96,22 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
     lensRing.position.set(0.77, 0.88, 0.04);
     lensRing.rotation.y = Math.PI / 2;
     rig.add(lensRing);
+
+    // Decorative scan beam for the cinematic lab visual; not connected to sensor data.
+    const scanMaterial = new THREE.MeshBasicMaterial({
+      color: accent, transparent: true, opacity: 0.42, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    });
+    const scanBeam = new THREE.Mesh(new THREE.PlaneGeometry(3.35, 0.014), scanMaterial);
+    scanBeam.position.set(0.02, -0.5, 1.02);
+    rig.add(scanBeam);
+    const scanAura = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.1, 0.075),
+      new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.09, depthWrite: false, side: THREE.DoubleSide }),
+    );
+    scanAura.position.copy(scanBeam.position);
+    scanAura.position.z -= 0.006;
+    rig.add(scanAura);
     for (const z of [-0.27, 0.27]) {
       const status = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), glow);
       status.position.set(-0.84, 0.18, z);
@@ -181,6 +197,9 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
       if (!reducedMotion) {
         rig.rotation.y = -0.18 + Math.sin(t * 0.24) * 0.045 + pointer.x * 0.055;
         rig.position.y = -0.2 + Math.sin(t * 0.7) * 0.035;
+        scanBeam.position.y = -0.5 + ((t * 0.42) % 1.28);
+        scanAura.position.y = scanBeam.position.y;
+        scanMaterial.opacity = 0.25 + (Math.sin(t * 2.1) + 1) * 0.09;
         orbitGroup.rotation.y = t * 0.035;
         ring1.rotation.z = -0.22 + Math.sin(t * 0.12) * 0.035;
         ring2.rotation.y = -0.4 + Math.cos(t * 0.1) * 0.04;
@@ -212,9 +231,9 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
   }, [mode]);
 
   return <div className={'immersive-scene immersive-scene-' + mode} ref={host} aria-hidden="true">
-    <div className="scene-hud scene-hud-top"><span><i/> VT / SYSTEM 0{mode === 'firebots' ? '2' : '1'}</span><span>OPTICAL TRACKING <b>ACTIVE</b></span></div>
+    <div className="scene-hud scene-hud-top"><span><i/> VT / SCENE 0{mode === 'firebots' ? '2' : '1'}</span><span>SCENE RENDER <b>INTERACTIVE</b></span></div>
     <div className="scene-reticle"><span/><i/><b/></div>
-    <div className="scene-hud scene-hud-bottom"><span>FIELD / 01—03</span><span>XYZ <b>CALIBRATED</b></span><span>VJ—{mode === 'firebots' ? 'FIRE' : 'LAB'} / 026</span></div>
+    <div className="scene-hud scene-hud-bottom"><span>FIELD / 01—03</span><span>XYZ <b>VISUAL ONLY</b></span><span>VJ—{mode === 'firebots' ? 'FIRE' : 'LAB'} / 026</span></div>
     <div className="scene-edge-glow"/>
   </div>;
 }
