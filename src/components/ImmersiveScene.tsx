@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 type SceneMode = 'home' | 'industrial' | 'firebots';
 
-function box(parent: THREE.Object3D, size: [number, number, number], position: [number, number, number], material: THREE.Material, bevel?: number) {
+function box(parent: THREE.Object3D, size: [number, number, number], position: [number, number, number], material: THREE.Material) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
   mesh.position.set(...position);
   mesh.castShadow = true;
@@ -69,7 +69,6 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
     box(rig, [0.8, 0.1, 0.83], [-0.26, 0.35, 0], darkPanel);
     box(rig, [0.16, 0.16, 0.88], [-0.97, -0.1, 0], accentMetal);
 
-    const wheels: THREE.Mesh[] = [];
     for (const side of [-1, 1]) {
       box(rig, [2.15, 0.32, 0.25], [0, -0.43, side * 0.73], rubber);
       box(rig, [1.78, 0.035, 0.018], [0, -0.25, side * 0.866], frameMetal);
@@ -79,7 +78,6 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
         wheel.position.set(x, -0.43, side * 0.81);
         wheel.castShadow = true;
         rig.add(wheel);
-        wheels.push(wheel);
         const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.086, 0.086, 0.145, 16), darkPanel);
         hub.rotation.x = Math.PI / 2;
         hub.position.set(x, -0.43, side * 0.81);
