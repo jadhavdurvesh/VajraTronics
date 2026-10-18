@@ -56,7 +56,6 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
     const darkPanel = new THREE.MeshStandardMaterial({ color: 0x111920, metalness: 0.65, roughness: 0.38 });
     const accentMetal = new THREE.MeshStandardMaterial({ color: accentSoft, metalness: 0.52, roughness: 0.31, emissive: accent, emissiveIntensity: 0.12 });
     const glow = new THREE.MeshBasicMaterial({ color: accent });
-    const blueGlow = new THREE.MeshBasicMaterial({ color: 0x78c7ff });
     const glass = new THREE.MeshPhysicalMaterial({ color: 0x10283b, metalness: 0.3, roughness: 0.1, transmission: 0.22, emissive: 0x0b4f7a, emissiveIntensity: 0.38 });
 
     const rig = new THREE.Group();
