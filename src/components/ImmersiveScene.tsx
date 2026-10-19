@@ -31,32 +31,32 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-    renderer.setClearColor(0x080b0f, 0);
+    renderer.setClearColor(0xeaf2f5, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.36;
+    renderer.toneMappingExposure = 1.55;
     renderer.domElement.setAttribute('aria-hidden', 'true');
     renderer.domElement.className = 'immersive-canvas';
     element.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xd8ecff, 0x151b23, 2.6));
-    const keyLight = new THREE.DirectionalLight(0xf0f6ff, 4.2);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x71818b, 3.1));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 5.1);
     keyLight.position.set(-2, 6, 5);
     scene.add(keyLight);
-    const blueLight = new THREE.PointLight(0x379dff, 38, 13);
+    const blueLight = new THREE.PointLight(0x55b8f5, 44, 14);
     blueLight.position.set(-2, 1.7, -2);
     scene.add(blueLight);
-    const amberLight = new THREE.PointLight(accent, 24, 9);
+    const amberLight = new THREE.PointLight(accent, 30, 10);
     amberLight.position.set(2.6, 1, 3);
     scene.add(amberLight);
-    const rimLight = new THREE.PointLight(0xe1f3ff, 18, 8);
+    const rimLight = new THREE.PointLight(0xffffff, 24, 9);
     rimLight.position.set(2.4, 1.2, -2.5);
     scene.add(rimLight);
 
-    const darkMetal = new THREE.MeshStandardMaterial({ color: 0x465462, metalness: 0.62, roughness: 0.29 });
-    const frameMetal = new THREE.MeshStandardMaterial({ color: 0x61788a, metalness: 0.6, roughness: 0.33 });
-    const rubber = new THREE.MeshStandardMaterial({ color: 0x080c10, metalness: 0.15, roughness: 0.8 });
-    const darkPanel = new THREE.MeshStandardMaterial({ color: 0x243544, metalness: 0.52, roughness: 0.34 });
+    const darkMetal = new THREE.MeshStandardMaterial({ color: 0xb8c8cf, metalness: 0.68, roughness: 0.26 });
+    const frameMetal = new THREE.MeshStandardMaterial({ color: 0x637985, metalness: 0.72, roughness: 0.24 });
+    const rubber = new THREE.MeshStandardMaterial({ color: 0x293943, metalness: 0.25, roughness: 0.72 });
+    const darkPanel = new THREE.MeshStandardMaterial({ color: 0xe2ebee, metalness: 0.48, roughness: 0.27 });
     const accentMetal = new THREE.MeshStandardMaterial({ color: accentSoft, metalness: 0.52, roughness: 0.31, emissive: accent, emissiveIntensity: 0.28 });
     const glow = new THREE.MeshBasicMaterial({ color: accent });
     const glass = new THREE.MeshPhysicalMaterial({ color: 0x10283b, metalness: 0.3, roughness: 0.1, transmission: 0.22, emissive: 0x0b4f7a, emissiveIntensity: 0.38 });
@@ -157,7 +157,7 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
     halo.position.y = -0.82;
     orbitGroup.add(halo);
 
-    const grid = new THREE.GridHelper(18, 32, 0x25465d, 0x172938);
+    const grid = new THREE.GridHelper(18, 32, 0x9dc8db, 0xb6d0dc);
     grid.position.set(0, -1.03, 0);
     const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
     gridMaterials.forEach((m) => { m.transparent = true; m.opacity = 0.34; });
@@ -172,7 +172,7 @@ export function ImmersiveScene({ mode = 'home' }: { mode?: SceneMode }) {
     }
     const particleGeometry = new THREE.BufferGeometry();
     particleGeometry.setAttribute('position', new THREE.BufferAttribute(points, 3));
-    const particles = new THREE.Points(particleGeometry, new THREE.PointsMaterial({ color: 0x86caff, size: 0.018, transparent: true, opacity: 0.68 }));
+    const particles = new THREE.Points(particleGeometry, new THREE.PointsMaterial({ color: 0x4e9bbc, size: 0.018, transparent: true, opacity: 0.42 }));
     scene.add(particles);
 
     const pointer = { x: 0, y: 0 };
