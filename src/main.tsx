@@ -30,7 +30,7 @@ function Home(){
  return <>
  <section className={'hero immersive-home hero-'+selected.slug} style={{'--accent':selected.accent,'--hero-image':'url('+selected.image+')'} as React.CSSProperties}>
   <div className="hero-media" aria-hidden="true"/>
-  <div className="hero-grid"/>
+  <div className="hero-grid"/><div className="hero-wordmark" aria-hidden="true">VAJRA<span>TRONICS</span></div>
   <React.Suspense fallback={<div className="scene-fallback" aria-hidden="true" />}><ImmersiveScene mode={industrial?'industrial':'firebots'}/></React.Suspense>
   <div className="hero-content">
    <motion.div className="hero-copy" key={selected.slug} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:[.22,1,.36,1]}}>
