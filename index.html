@@ -1,14 +1,110 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VajraTronics — Mechatronics in Motion</title>
-<style>html,body{margin:0;height:100%;overflow:hidden;background:#0b0e14}canvas{display:block}
-#hud{position:fixed;left:12px;top:10px;color:#cfd8e3;font:12px/1.5 ui-monospace,monospace;pointer-events:none;text-shadow:0 1px 2px #000}</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#090b0b" />
+  <meta name="description" content="VajraTronics — a mechatronics project team building intelligent machines for a safer, more predictive world." />
+  <title>VajraTronics — Engineering the Next Pulse</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%23ff5c35%22/><path d=%22M13 17h11l8 24 8-24h11L37 51H27z%22 fill=%22%23090b0b%22/></svg>" />
+  <link rel="stylesheet" href="./src/style.css" />
 </head>
 <body>
-<div id="hud"></div>
-<script type="module" src="./src/scene.js"></script>
+  <div class="boot" aria-hidden="true"><div class="boot-mark">V<span>///</span></div><div class="boot-line"><i></i></div><small>INITIALIZING MECHATRONICS</small></div>
+  <div class="scene-wrap" aria-hidden="true"><div class="scene-fallback"></div></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="VajraTronics home"><span class="brand-glyph">V<span>///</span></span><span>VAJRA<br>TRONICS</span></a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a href="#projects">Projects</a><a href="#philosophy">Approach</a><a href="#team">Team</a>
+    </nav>
+    <div class="header-meta"><span class="live-dot"></span> SYSTEMS ONLINE <span class="edition">©2026</span></div>
+    <button class="menu-toggle icon-button" aria-label="Open menu" aria-expanded="false"><i data-lucide="menu"></i></button>
+  </header>
+
+  <div class="mobile-menu" aria-hidden="true">
+    <button class="menu-close icon-button" aria-label="Close menu"><i data-lucide="x"></i></button>
+    <nav aria-label="Mobile navigation"><a href="#projects">Projects</a><a href="#philosophy">Approach</a><a href="#team">Team</a></nav>
+    <p>MECHATRONICS DEPARTMENT<br>COLLEGE PROJECT TEAM</p>
+  </div>
+
+  <aside class="side-rail" aria-hidden="true"><span>VAJRATRONICS / 2026</span><div class="rail-line"><i></i></div><span class="rail-count">01 — 05</span></aside>
+  <div class="scene-label" aria-hidden="true"><span class="label-cross">+</span><span id="scene-name">VAJRA CORE / MK.01</span><small>GENERATIVE 3D STUDY</small></div>
+
+  <main>
+    <section class="hero dark-section" id="top" data-scene="core" data-label="VAJRA CORE / MK.01">
+      <div class="hero-top"><p class="mono">MECHATRONICS × INTELLIGENCE<br>COLLEGE PROJECT TEAM</p><p class="hero-coordinate mono">12° 58′ N<br>77° 35′ E</p></div>
+      <h1 class="hero-title" aria-label="VajraTronics"><span>VAJRA</span><span class="title-bottom">TRONICS<sup>®</sup></span></h1>
+      <div class="hero-bottom">
+        <p class="hero-intro">We engineer machines that<br><strong>sense, decide and act.</strong></p>
+        <a href="#projects" class="round-link" aria-label="Explore our projects"><span>EXPLORE<br>PROJECTS</span><i data-lucide="arrow-down-right"></i></a>
+        <div class="hero-spec mono"><span>FIELD / MECHATRONICS</span><span>FOCUS / APPLIED INTELLIGENCE</span><span>STATUS / BUILDING THE FUTURE</span></div>
+      </div>
+      <div class="scroll-cue mono"><span></span> SCROLL TO DISASSEMBLE</div>
+    </section>
+
+    <section class="manifesto light-section" id="philosophy">
+      <div class="section-tag mono"><span>01 / OUR APPROACH</span><span>HARDWARE MEETS FORESIGHT</span></div>
+      <p class="manifesto-lead">NOT JUST MACHINES.<br><em>Mechanical instincts.</em></p>
+      <div class="manifesto-grid">
+        <div class="manifesto-symbol" aria-hidden="true"><span>V</span><i></i><i></i><i></i></div>
+        <div class="manifesto-copy"><p>VajraTronics is a college project team from the Mechatronics department. We bring mechanics, electronics and software into one deliberate system.</p><p>From predicting machine failure to entering environments too dangerous for people, we build with one question in mind: <strong>what should technology make possible next?</strong></p></div>
+      </div>
+      <div class="discipline-row mono"><span>MECHANICAL DESIGN</span><i data-lucide="plus"></i><span>EMBEDDED SYSTEMS</span><i data-lucide="plus"></i><span>INTELLIGENT SOFTWARE</span></div>
+    </section>
+
+    <section class="projects-intro dark-section" id="projects" data-scene="core" data-label="SYSTEM ARCHIVE / 02 UNITS">
+      <div class="section-tag mono"><span>02 / SELECTED BUILDS</span><span>TWO MACHINES. ONE PURPOSE.</span></div>
+      <h2>BUILT TO<br><span>RESPOND.</span></h2>
+      <p>Real problems. Integrated systems.<br>Machines designed for the moment that matters.</p>
+      <div class="project-ticker mono"><span>YANTRACHIKITSA</span><span>+</span><span>RUDRA</span><span>+</span><span>YANTRACHIKITSA</span><span>+</span><span>RUDRA</span></div>
+    </section>
+
+    <section class="project project-yantra dark-section" id="yantrachikitsa" data-scene="machine" data-label="YANTRACHIKITSA / LIVE MACHINE HEALTH">
+      <div class="project-copy">
+        <div class="project-number mono">P—01 <span>IN DEVELOPMENT</span></div>
+        <p class="project-kicker mono">PREDICTIVE + LIVE MACHINE PLATFORM</p>
+        <h2>YANTRA<br><span>CHIKITSA</span></h2>
+        <p class="project-description">A live window into machine health. Yantrachikitsa brings operational signals and predictive insight together — helping teams move from reactive repair to informed intervention.</p>
+        <div class="project-tags mono"><span>LIVE MONITORING</span><span>MACHINE HEALTH</span><span>PREDICTION</span></div>
+        <button class="text-link project-open" data-project="yantra"><span>VIEW PROJECT SYSTEM</span><i data-lucide="arrow-up-right"></i></button>
+      </div>
+      <div class="project-aside mono"><span>01</span><p>OBSERVE<br>ANALYZE<br>ANTICIPATE</p></div>
+      <div class="project-caption mono">CONCEPT VISUALIZATION / NOT HARDWARE FOOTAGE</div>
+    </section>
+
+    <section class="project project-rudra dark-section" id="rudra" data-scene="robot" data-label="RUDRA / AUTONOMOUS RESPONSE UNIT">
+      <div class="project-copy">
+        <div class="project-number mono">P—02 <span>IN DEVELOPMENT</span></div>
+        <p class="project-kicker mono">AUTONOMOUS FIRE-FIGHTING ROBOT</p>
+        <h2>RU<span>DRA</span></h2>
+        <p class="project-description">An autonomous response concept built to go where risk rises. Rudra combines robotic mobility, fire detection and suppression thinking in one mission-focused platform.</p>
+        <div class="project-tags mono"><span>AUTONOMY</span><span>FIRE RESPONSE</span><span>ROBOTICS</span></div>
+        <button class="text-link project-open" data-project="rudra"><span>VIEW PROJECT SYSTEM</span><i data-lucide="arrow-up-right"></i></button>
+      </div>
+      <div class="project-aside mono"><span>02</span><p>DETECT<br>NAVIGATE<br>SUPPRESS</p></div>
+      <div class="project-caption mono">CONCEPT VISUALIZATION / NOT HARDWARE FOOTAGE</div>
+    </section>
+
+    <section class="team light-section" id="team">
+      <div class="section-tag mono"><span>03 / THE TEAM</span><span>DIFFERENT DISCIPLINES. SHARED CURIOSITY.</span></div>
+      <div class="team-heading"><h2>STUDENTS<br>BY DEGREE.<br><em>Builders by nature.</em></h2><div class="team-orbit" aria-hidden="true"><span>V</span></div></div>
+      <div class="team-bottom"><p>We are VajraTronics — a Mechatronics department project team learning by making, testing and rebuilding. Every prototype is where the classroom becomes real.</p><a href="#top" class="back-top">BACK TO THE CORE <i data-lucide="arrow-up"></i></a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer dark-section">
+    <div class="footer-mark">V<span>///</span></div><h2>MAKE IT<br><span>MOVE.</span></h2>
+    <div class="footer-bottom mono"><span>VAJRATRONICS © 2026</span><span>MECHATRONICS PROJECT TEAM</span><span>DESIGNED TO KEEP BUILDING</span></div>
+  </footer>
+
+  <dialog class="project-dialog" aria-labelledby="dialog-title">
+    <button class="dialog-close icon-button" aria-label="Close project details"><i data-lucide="x"></i></button>
+    <div class="dialog-index mono"></div><p class="dialog-status mono"></p><h2 id="dialog-title"></h2><p class="dialog-summary"></p>
+    <div class="dialog-systems"></div><p class="dialog-note mono">PROJECT IN PROGRESS — SYSTEM DETAILS REPRESENT THE CURRENT DESIGN DIRECTION.</p>
+  </dialog>
+  <div class="cursor" aria-hidden="true"><span></span></div>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>
