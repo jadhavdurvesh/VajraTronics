@@ -69,12 +69,14 @@ addEventListener('keydown', event => { if (event.key === 'Escape' && menu.classL
 
 const projects = {
   yantra: {
-    index: 'PROJECT P—01', status: 'IN DEVELOPMENT / MACHINE INTELLIGENCE', title: 'Yantrachikitsa',
-    summary: 'A predictive and live machine platform designed around a simple shift: understand equipment while it runs, and act before a small signal becomes a larger problem.',
+    index: 'PROJECT P—01', status: 'PREDICTIVE MAINTENANCE / INDUSTRIAL IoT', title: 'Yantrachikitsa',
+    summary: 'Yantrachikitsa is MAINTAIN AI’s machine-health and predictive-maintenance platform. It is designed to bring live equipment telemetry and condition insights together so teams can spot unusual behaviour earlier, make better-informed maintenance decisions, and reduce reliance on reactive repairs.',
+    url: 'https://maintain-ai-3.vercel.app/',
+    note: 'OPEN THE MAINTAIN AI PLATFORM TO EXPLORE THE PROJECT',
     systems: [
-      { icon: 'radio', title: 'Live signals', text: 'A clear view of operating conditions and machine behaviour.' },
-      { icon: 'activity', title: 'Health insight', text: 'Patterns and changes organized into useful machine-health context.' },
-      { icon: 'chart-no-axes-combined', title: 'Prediction', text: 'A direction for earlier, better-informed maintenance decisions.' },
+      { icon: 'radio', title: 'Live telemetry', text: 'Connect machine signals such as temperature, vibration and current for visibility into operating conditions.' },
+      { icon: 'activity', title: 'Machine health', text: 'Organize sensor readings and changing patterns into useful condition-monitoring context.' },
+      { icon: 'chart-no-axes-combined', title: 'Predictive maintenance', text: 'Use trends and early warning signs to support timely inspection and maintenance planning.' },
     ],
   },
   rudra: {
@@ -95,6 +97,10 @@ document.querySelectorAll('.project-open').forEach(button => button.addEventList
   dialog.querySelector('.dialog-status').textContent = project.status;
   dialog.querySelector('#dialog-title').textContent = project.title;
   dialog.querySelector('.dialog-summary').textContent = project.summary;
+  dialog.querySelector('.dialog-note').textContent = project.note || 'PROJECT IN PROGRESS — SYSTEM DETAILS REPRESENT THE CURRENT DESIGN DIRECTION.';
+  const projectLink = dialog.querySelector('.dialog-project-link');
+  projectLink.hidden = !project.url;
+  if (project.url) projectLink.href = project.url;
   dialog.querySelector('.dialog-systems').innerHTML = project.systems.map(system => `<article class="dialog-system"><i data-lucide="${system.icon}"></i><h3>${system.title}</h3><p>${system.text}</p></article>`).join('');
   refreshIcons(); dialog.showModal(); document.body.classList.add('dialog-open');
   dialog.querySelector('.dialog-close').focus();
