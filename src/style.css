@@ -27,3 +27,5 @@ main,footer{position:relative;z-index:2}section{position:relative;padding:120px 
 .team-member-rule{display:block;width:32px;height:3px;background:var(--orange);margin-bottom:16px}
 .team-member p{font-size:8px;letter-spacing:.08em;opacity:.65;margin:0}
 @media(max-width:600px){.team-roster{grid-template-columns:1fr;margin-bottom:55px}.team-member{padding:22px 0;border-right:0;border-bottom:1px solid rgba(9,11,11,.2)}.team-member:last-child{border-bottom:0}.team-member h3{font-size:28px;margin:24px 0 18px}}
+
+.dialog-project-link{display:flex;align-items:center;justify-content:space-between;gap:24px;width:fit-content;max-width:100%;margin:0 0 28px;padding:15px 18px;border:1px solid var(--orange);color:var(--orange);font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-decoration:none;transition:background .2s,color .2s}.dialog-project-link:hover{background:var(--orange);color:var(--ink)}.dialog-project-link[hidden]{display:none}.dialog-project-link svg{width:17px;flex-shrink:0}
