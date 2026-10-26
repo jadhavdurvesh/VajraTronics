@@ -82,6 +82,8 @@ const projects = {
   rudra: {
     index: 'PROJECT P—02', status: 'IN DEVELOPMENT / AUTONOMOUS ROBOTICS', title: 'Rudra',
     summary: 'An autonomous fire-fighting robot concept that brings mobility, sensing and suppression into a single response system — designed with hazardous environments in mind.',
+    url: 'https://rudra-beryl.vercel.app/',
+    linkText: 'EXPERIENCE RUDRA',
     systems: [
       { icon: 'scan-line', title: 'Detect', text: 'Sensing and fire-detection logic guide the response mission.' },
       { icon: 'route', title: 'Navigate', text: 'Autonomous robotic mobility for moving through the response area.' },
@@ -101,6 +103,7 @@ document.querySelectorAll('.project-open').forEach(button => button.addEventList
   const projectLink = dialog.querySelector('.dialog-project-link');
   projectLink.hidden = !project.url;
   if (project.url) projectLink.href = project.url;
+  if (projectLink.firstChild) projectLink.firstChild.textContent = (project.linkText || 'OPEN MAINTAIN AI PLATFORM') + ' ';
   dialog.querySelector('.dialog-systems').innerHTML = project.systems.map(system => `<article class="dialog-system"><i data-lucide="${system.icon}"></i><h3>${system.title}</h3><p>${system.text}</p></article>`).join('');
   refreshIcons(); dialog.showModal(); document.body.classList.add('dialog-open');
   dialog.querySelector('.dialog-close').focus();
