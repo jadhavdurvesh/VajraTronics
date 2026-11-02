@@ -115,6 +115,64 @@ dialog.addEventListener('close', () => { document.body.classList.remove('dialog-
 
 if (matchMedia('(pointer:fine)').matches && !reduceMotion) {
   const cursor = document.querySelector('.cursor');
-  addEventListener('pointermove', event => { cursor.style.left = `${event.clientX}px`; cursor.style.top = `${event.clientY}px`; }, { passive: true });
-  document.querySelectorAll('a,button').forEach(el => { el.addEventListener('mouseenter', () => cursor.classList.add('active')); el.addEventListener('mouseleave', () => cursor.classList.remove('active')); });
+  const trail = Array.from({ length: 4 }, (_, index) => {
+    const dot = document.createElement('i');
+    dot.className = 'cursor-trail';
+    dot.dataset.trail = String(index + 1);
+    document.body.append(dot);
+    return dot;
+  });
+
+  let trailX = 0;
+  let trailY = 0;
+  let lastPointerX = innerWidth / 2;
+  let lastPointerY = innerHeight / 2;
+
+  const moveCursor = event => {
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+    cursor.style.left = `${lastPointerX}px`;
+    cursor.style.top = `${lastPointerY}px`;
+    trail.forEach((dot, index) => {
+      dot.style.left = `${lastPointerX}px`;
+      dot.style.top = `${lastPointerY}px`;
+      dot.style.setProperty('--trail-delay', `${(index + 1) * 35}ms`);
+    });
+  };
+  addEventListener('pointermove', moveCursor, { passive: true });
+
+  const getTargetLabel = target => {
+    const explicit = target.getAttribute('data-cursor-label');
+    if (explicit) return explicit;
+    if (target.matches('.project-open')) return 'ACCESS SYSTEM';
+    if (target.matches('.menu-toggle,.menu-close,.dialog-close')) return 'CONTROL';
+    if (target.matches('.rudra-download-link')) return 'DOWNLOAD';
+    if (target.matches('a[href^="#"]')) return 'NAVIGATE';
+    if (target.matches('a[target="_blank"]')) return 'OPEN EXTERNAL';
+    return 'INTERACT';
+  };
+
+  document.addEventListener('pointerover', event => {
+    const target = event.target.closest('a,button,[role="button"]');
+    if (!target) return;
+    cursor.classList.add('active', 'target-locked');
+    cursor.dataset.label = getTargetLabel(target);
+  });
+  document.addEventListener('pointerout', event => {
+    const target = event.target.closest('a,button,[role="button"]');
+    if (!target || target.contains(event.relatedTarget)) return;
+    cursor.classList.remove('active', 'target-locked');
+    cursor.dataset.label = '';
+  });
+
+  document.addEventListener('pointerdown', () => {
+    cursor.classList.remove('impact');
+    void cursor.offsetWidth;
+    cursor.classList.add('impact');
+  });
+  cursor.addEventListener('animationend', event => {
+    if (event.animationName === 'cursor-impact') cursor.classList.remove('impact');
+  });
+  document.addEventListener('pointerleave', () => cursor.classList.add('cursor-hidden'));
+  document.addEventListener('pointerenter', () => cursor.classList.remove('cursor-hidden'));
 }
