@@ -88,3 +88,35 @@ main,footer{position:relative;z-index:2}section{position:relative;padding:120px 
 @keyframes cursor-radar{0%{transform:scale(.7);opacity:.8}100%{transform:scale(1.65);opacity:0}}
 @keyframes cursor-rotate{to{transform:rotate(360deg)}}
 @keyframes cursor-impact{0%{transform:translate3d(var(--cursor-x,0),var(--cursor-y,0),0) translate(-50%,-50%) scale(1)}45%{filter:brightness(1.35)}100%{filter:brightness(1)}}
+
+
+/* VAJRA // industrial system scrollbar */
+:root{
+  scrollbar-width:thin;
+  scrollbar-color:var(--orange) #101312;
+  scrollbar-gutter:stable;
+}
+html{scrollbar-color:var(--orange) #101312;scrollbar-width:thin}
+body{overflow-x:hidden}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{
+  background:#101312;
+  border-left:1px solid rgba(239,239,231,.08);
+}
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#ff8a63 0%,#ff5c35 55%,#a92e16 100%);
+  border:2px solid #101312;
+  border-radius:0;
+  min-height:44px;
+}
+::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,#ffb092 0%,#ff7048 55%,#d94320 100%);
+}
+::-webkit-scrollbar-corner{background:#101312}
+@media(max-width:900px){
+  :root,html{scrollbar-width:thin;scrollbar-color:rgba(255,92,53,.75) #101312}
+  ::-webkit-scrollbar{width:6px;height:6px}
+}
+@media(prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth}
+}
