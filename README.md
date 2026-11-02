@@ -36,7 +36,7 @@ Import this GitHub repository into the separate Vercel account you intend to use
 
 ## SENTINEL edge protection
 
-VajraTronics includes a framework-independent Vercel Routing Middleware connector in `middleware.js`. It runs before the static-site response is served and protects document/navigation requests while skipping the built asset directories and common static file extensions.
+VajraTronics includes a framework-independent Vercel Routing Middleware connector in root `proxy.js`, explicitly registered through `proxy.entrypoint` and `proxy.matcher` in `vercel.json`. It runs before the static-site response is served and protects document/navigation requests while skipping built assets and common static file extensions.
 
 ### Vercel environment variables
 
@@ -87,8 +87,8 @@ After these source changes, wait for Vercel's new production deployment to becom
 
 ### Vercel Routing Middleware deployment
 
-This Vite site uses Vercel's framework-independent Routing Middleware through the explicit `proxy.entrypoint` and `proxy.matcher` settings in root `vercel.json`. The entrypoint is root-level `proxy.js` and continues ordinary requests using `next()` from the `@vercel/functions` package. The previous root `middleware.js` convention is not used by this non-Next.js setup.
+This Vite site uses Vercel's framework-independent Routing Middleware through the explicit `proxy.entrypoint` and `proxy.matcher` settings in root `vercel.json`. The root entrypoint is `proxy.js`, and ordinary requests continue through `next()` from `@vercel/functions`. The legacy `middleware.js` file and old lockfile are removed.
 
-The middleware checks an existing restriction, detects selected high-confidence URL probes, and submits the event. SENTINEL's event-ingestion API returns a signed challenge URL directly if that event creates a restriction, so the proxy does not need a second decision request.
+The proxy checks an existing restriction, detects selected high-confidence URL probes, and submits the event. SENTINEL's event-ingestion API returns a signed challenge URL directly when an event creates a restriction, allowing the proxy to redirect without another decision request.
 
-For temporary verification only, configure `SENTINEL_DEBUG=true` in Vercel. A protected document response should then include `X-SENTINEL-Middleware: active` and an `X-SENTINEL-Check` status. Disable this variable after testing. See the Vercel deployment summary for the `proxy.js` entrypoint and Routing Middleware status.
+For temporary verification only, set `SENTINEL_DEBUG=true` in the VajraTronics Vercel project. A document response should include `X-SENTINEL-Middleware: active` and an `X-SENTINEL-Check` status. Disable the variable after testing. Check the Vercel deployment summary for the `proxy.js` entrypoint and Routing Middleware status.
