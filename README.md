@@ -75,3 +75,11 @@ After adding the environment variables, redeploy VajraTronics. Test with a stagi
 - Test all routes, form submission, mobile navigation and the production build before sharing publicly.
 
 Project content currently contains editorial starter copy. Planned capabilities must be updated to match verified team progress.
+
+### Current Vercel Routing Middleware configuration
+
+This Vite project uses the framework-independent Vercel Routing Middleware entrypoint `proxy.js`, explicitly declared by `proxy.entrypoint` and `proxy.matcher` in the root `vercel.json`. The project installs `@vercel/functions` and uses its documented `next()` helper to continue normal requests. The legacy `middleware.js` file is not used.
+
+When an event reaches the restriction threshold, SENTINEL's event endpoint now returns the signed `challenge_url` directly. The proxy can redirect immediately without making a second decision request.
+
+After these source changes, wait for Vercel's new production deployment to become Ready. In the deployment summary, verify that `proxy.js` is listed as a Routing Middleware/Proxy entrypoint. With `SENTINEL_DEBUG=true`, response headers `X-SENTINEL-Middleware: active` and `X-SENTINEL-Check` provide temporary diagnostics; remove or disable this variable after testing.
