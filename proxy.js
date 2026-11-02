@@ -70,7 +70,7 @@ function diagnosticCode(error, stage) {
 function safeHeader(request, name, max = 180) {
   const value = request.headers.get(name);
   if (!value) return null;
-  return value.replace(/[\\u0000-\\u001f\\u007f]/g, "").slice(0, max);
+  return Array.from(value).filter(char => { const code = char.charCodeAt(0); return code >= 32 && code !== 127; }).join("").slice(0, max);
 }
 
 function securityEvidence(request, url, signal) {
