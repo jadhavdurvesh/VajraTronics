@@ -12,7 +12,7 @@ scene.background = new THREE.Color(0x090b0b);
 scene.fog = new THREE.FogExp2(0x090b0b, 0.035);
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 180);
 camera.position.set(0, 2.2, 14);
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
@@ -162,19 +162,43 @@ function sample(t) {
   camera.lookAt(0, mobile ? .4 : 0, 0);
   orangeLight.position.x = stage === 'robot' ? -3 : 3;
 }
-let usePost = true, qualityFrames = 0, qualityTime = 0, lowFrames = 0, lowTime = 0, lowPower = false;
+// Adaptive quality: let shaders and GPU resources warm up before measuring.
+let usePost = true, lowPower = false;
+let warmupTime = 0, benchmarkTime = 0, benchmarkFrames = 0;
+function applyRenderScale(scale) {
+  renderer.setPixelRatio(Math.min(devicePixelRatio, scale));
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+}
 function draw() { if (usePost) composer.render(); else renderer.render(scene, camera); }
 const clock = new THREE.Clock(); let simT = 0, paused = false, acc = 0;
 renderer.setAnimationLoop(() => {
   const rawDt = clock.getDelta(), dt = Math.min(rawDt, .08);
   if (!paused && !reduceMotion) {
     acc += dt; while (acc >= 1 / 60) { simT += 1 / 60; acc -= 1 / 60; }
-    if (usePost && qualityFrames < 30) {
-      qualityFrames++; qualityTime += rawDt;
-      if (qualityFrames === 30 && qualityFrames / qualityTime < 26) { usePost = false; renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); }
-    } else if (!usePost && !lowPower) {
-      lowFrames++; lowTime += rawDt;
-      if (lowFrames === 30 && lowFrames / lowTime < 26) { lowPower = true; renderer.shadowMap.enabled = false; key.castShadow = false; }
+
+    if (warmupTime < 2) {
+      warmupTime += rawDt;
+    } else if (!lowPower) {
+      benchmarkTime += rawDt;
+      benchmarkFrames++;
+      if (benchmarkTime >= 2.5) {
+        const measuredFps = benchmarkFrames / benchmarkTime;
+        if (measuredFps < 22) {
+          // Keep bloom, but lower render resolution and remove costly real-time shadows.
+          applyRenderScale(1.15);
+          renderer.shadowMap.enabled = false;
+          key.castShadow = false;
+          lowPower = true;
+        } else if (measuredFps < 29) {
+          // Medium mode: preserve the cinematic bloom while reducing pixel workload.
+          applyRenderScale(1.35);
+          lowPower = true;
+        } else {
+          // High mode: retain the full-resolution post-processed scene.
+          lowPower = true;
+        }
+      }
     }
   }
   sample(simT); draw();
