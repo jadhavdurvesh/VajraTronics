@@ -162,7 +162,15 @@ export default async function middleware(request) {
 
   const decisionUrl = `${apiOrigin}/api/v1/decision`;
   const eventUrl = `${apiOrigin}/api/v1/events`;
-  const decisionPayload = { site_id: siteId, subject_ref: subjectRef };
+  const requestUrl = new URL(request.url);
+  const decisionPayload = {
+    site_id: siteId,
+    subject_ref: subjectRef,
+    site_domain: requestUrl.hostname,
+    edge_provider: "vercel",
+    deployment: process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || null,
+    edge_request_id: safeHeader(request, "x-vercel-id", 200),
+  };
 
   // First check whether this browser already has a restriction.
   try {
