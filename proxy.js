@@ -60,7 +60,7 @@ function redirectToSentinel(challengePath, publicOrigin, setCookie) {
 
 function diagnosticCode(error, stage) {
   const message = error instanceof Error ? error.message : String(error || "");
-  const status = message.match(/SENTINEL API HTTP (\\d{3})/);
+  const status = message.match(/SENTINEL API HTTP (\d{3})/);
   if (status) return `${stage}-http-${status[1]}`;
   if (/timeout|timed out|abort/i.test(message)) return `${stage}-timeout`;
   return `${stage}-network-error`;
@@ -96,7 +96,7 @@ function securityEvidence(request, url, signal) {
       timezone: safeHeader(request, "x-vercel-ip-timezone", 80),
     },
     edge_request_id: safeHeader(request, "x-vercel-id", 200),
-    site_path: requestUrl.pathname.slice(0, 500),
+    site_path: url.pathname.slice(0, 500),
   };
 }
 
