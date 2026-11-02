@@ -57,6 +57,15 @@ function redirectToSentinel(challengePath, publicOrigin, setCookie) {
   return new Response(null, { status: 302, headers });
 }
 
+
+function diagnosticCode(error, stage) {
+  const message = error instanceof Error ? error.message : String(error || "");
+  const status = message.match(/SENTINEL API HTTP (\\d{3})/);
+  if (status) return `${stage}-http-${status[1]}`;
+  if (/timeout|timed out|abort/i.test(message)) return `${stage}-timeout`;
+  return `${stage}-network-error`;
+}
+
 function classifyProbe(url) {
   let path = url.pathname;
   let search = url.search;
@@ -158,8 +167,9 @@ export default async function middleware(request) {
     }
     return continueRequest(setCookie, "signal-recorded");
   } catch (error) {
-    console.error("[SENTINEL] Event submission or decision failed:", error instanceof Error ? error.message : "unknown error");
-    return continueRequest(setCookie, "api-unavailable");
+    const status = diagnosticCode(error, "event");
+    console.error("[SENTINEL] Event submission failed:", status);
+    return continueRequest(setCookie, status);
   }
 }
 
