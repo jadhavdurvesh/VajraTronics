@@ -8,9 +8,9 @@ const iconSet = { Menu, X, ArrowDownRight, ArrowUpRight, ArrowUp, Plus, Activity
 const refreshIcons = () => createIcons({ icons: iconSet, attrs: { 'stroke-width': 1.5 } });
 refreshIcons();
  
-// VAJRA // cinematic score and automatic audio startup.
+// VAJRA // original slow-burn cinematic score and automatic audio startup.
 const soundToggle=document.querySelector('.audio-toggle');
-let audioContext=null,masterGain=null,musicBus=null,musicNodes=[],soundEnabled=false,musicTimer=null,musicStep=0;
+let audioContext=null,masterGain=null,musicBus=null,musicNodes=[],soundEnabled=false,musicTimer=null,barIndex=0,melodyIndex=0;
 let audioUnlockPending=true;
 
 function ensureAudio(){
@@ -19,76 +19,105 @@ function ensureAudio(){
   if(!C){soundToggle.disabled=true;soundToggle.querySelector('.audio-state').textContent='AUDIO N/A';return;}
   audioContext=new C();
   const compressor=audioContext.createDynamicsCompressor();
-  compressor.threshold.value=-18;compressor.knee.value=18;compressor.ratio.value=4;
-  compressor.attack.value=.012;compressor.release.value=.22;
+  compressor.threshold.value=-22;compressor.knee.value=24;compressor.ratio.value=3;
+  compressor.attack.value=.04;compressor.release.value=.5;
   masterGain=audioContext.createGain();masterGain.gain.value=0;
   masterGain.connect(compressor);compressor.connect(audioContext.destination);
-  musicBus=audioContext.createGain();musicBus.gain.value=1;
-  musicBus.connect(masterGain);
+  musicBus=audioContext.createGain();musicBus.gain.value=.9;musicBus.connect(masterGain);
 }
-function voice(freq,duration,opts={}){
+function addNode(node){musicNodes.push(node);return node;}
+function cinematicVoice(freq,duration,{type='sine',volume=.08,cutoff=2400,detune=0,when=null,attack=.8,release=1.5}={}){
   if(!audioContext)return;
-  const t=opts.when??audioContext.currentTime;
-  const osc=audioContext.createOscillator(),amp=audioContext.createGain(),filter=audioContext.createBiquadFilter();
-  osc.type=opts.type||'sine';osc.frequency.setValueAtTime(freq,t);
-  if(opts.end)osc.frequency.exponentialRampToValueAtTime(Math.max(1,opts.end),t+duration);
-  filter.type=opts.filter||'lowpass';filter.frequency.value=opts.cutoff||5000;
+  const t=when??audioContext.currentTime;
+  const osc=addNode(audioContext.createOscillator()),filter=addNode(audioContext.createBiquadFilter()),amp=addNode(audioContext.createGain());
+  osc.type=type;osc.frequency.setValueAtTime(freq,t);osc.detune.value=detune;
+  filter.type='lowpass';filter.frequency.setValueAtTime(cutoff,t);filter.Q.value=.45;
   amp.gain.setValueAtTime(.0001,t);
-  amp.gain.exponentialRampToValueAtTime(opts.volume??.1,t+.012);
+  amp.gain.exponentialRampToValueAtTime(volume,t+attack);
+  amp.gain.setValueAtTime(volume,t+Math.max(attack,duration-release));
   amp.gain.exponentialRampToValueAtTime(.0001,t+duration);
-  osc.connect(filter);filter.connect(amp);amp.connect(opts.bus||musicBus);
-  osc.start(t);osc.stop(t+duration+.03);
+  osc.connect(filter);filter.connect(amp);amp.connect(musicBus);
+  osc.start(t);osc.stop(t+duration+.08);
 }
-function noiseHit(duration,volume,cutoff,when){
+function pianoNote(freq,when){
   if(!audioContext)return;
-  const length=Math.max(1,Math.floor(audioContext.sampleRate*duration));
-  const buffer=audioContext.createBuffer(1,length,audioContext.sampleRate);
-  const data=buffer.getChannelData(0);
-  for(let i=0;i<length;i++)data[i]=Math.random()*2-1;
-  const source=audioContext.createBufferSource(),filter=audioContext.createBiquadFilter(),gain=audioContext.createGain();
-  source.buffer=buffer;filter.type='lowpass';filter.frequency.value=cutoff;
-  gain.gain.setValueAtTime(volume,when);gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
-  source.connect(filter);filter.connect(gain);gain.connect(musicBus);source.start(when);source.stop(when+duration);
-  musicNodes.push(source);
+  const t=when??audioContext.currentTime;
+  const osc=audioContext.createOscillator(),amp=audioContext.createGain(),filter=audioContext.createBiquadFilter();
+  osc.type='sine';osc.frequency.value=freq;filter.type='lowpass';filter.frequency.value=1900;
+  amp.gain.setValueAtTime(.0001,t);amp.gain.exponentialRampToValueAtTime(.12,t+.025);
+  amp.gain.exponentialRampToValueAtTime(.0001,t+3.8);
+  osc.connect(filter);filter.connect(amp);amp.connect(musicBus);osc.start(t);osc.stop(t+3.9);
+  musicNodes.push(osc,amp,filter);
 }
 function startAmbientMusic(){
   if(!audioContext||musicTimer)return;
-  // Broad cinematic chord progression: Cm - Ab - Eb - Bb, with evolving upper voices.
-  const chords=[
-    [130.81,155.56,196,233.08,261.63],
-    [103.83,130.81,155.56,207.65,261.63],
-    [155.56,196,233.08,311.13,392],
-    [116.54,146.83,174.61,233.08,293.66]
+  // Spacious, slowly evolving orchestral-synth harmony; original composition, not a soundtrack copy.
+  const progressions=[
+    {root:65.41,notes:[130.81,155.56,196,233.08],top:392},
+    {root:51.91,notes:[103.83,130.81,155.56,207.65],top:311.13},
+    {root:77.78,notes:[155.56,196,233.08,311.13],top:466.16},
+    {root:58.27,notes:[116.54,146.83,174.61,233.08],top:349.23}
   ];
-  const bass=[65.41,51.91,77.78,58.27];
-  const melody=[523.25,466.16,392,349.23,392,466.16,587.33,523.25,466.16,392,311.13,349.23,392,466.16,523.25,698.46];
-  const arp=[261.63,392,523.25,466.16,311.13,466.16,622.25,523.25,311.13,466.16,622.25,587.33,233.08,349.23,466.16,523.25];
-  const stepMs=300;musicStep=0;
+  const start=audioContext.currentTime;
+  const masterPad=addNode(audioContext.createGain());masterPad.gain.value=.7;masterPad.connect(musicBus);
+  const lowpass=addNode(audioContext.createBiquadFilter());lowpass.type='lowpass';lowpass.frequency.value=1150;lowpass.Q.value=.5;lowpass.connect(masterPad);
+  const voices=[];
+  [0,1,2,3,4].forEach(i=>{
+    const osc=addNode(audioContext.createOscillator()),amp=addNode(audioContext.createGain());
+    osc.type=i===0?'triangle':'sawtooth';amp.gain.value=i===0?.16:.035;
+    osc.connect(amp);amp.connect(lowpass);osc.start(start);voices.push(osc);
+  });
+  const sub=addNode(audioContext.createOscillator()),subGain=addNode(audioContext.createGain());
+  sub.type='sine';sub.frequency.value=32.7;subGain.gain.value=.18;sub.connect(subGain);subGain.connect(musicBus);sub.start(start);
+  const shimmer=addNode(audioContext.createOscillator()),shimmerGain=addNode(audioContext.createGain()),shimmerFilter=addNode(audioContext.createBiquadFilter());
+  shimmer.type='sine';shimmer.frequency.value=.11;shimmerGain.gain.value=380;
+  shimmerFilter.type='lowpass';shimmerFilter.frequency.value=1100;
+  shimmer.connect(shimmerGain);shimmerGain.connect(shimmerFilter.frequency);shimmerFilter.connect(masterPad);shimmer.start(start);
+  function changeChord(index){
+    const chord=progressions[index%progressions.length],t=audioContext.currentTime+.04;
+    sub.frequency.setTargetAtTime(chord.root/2,t,2.2);
+    voices.forEach((osc,i)=>osc.frequency.setTargetAtTime(chord.notes[i%chord.notes.length],t,2.8));
+    lowpass.frequency.setTargetAtTime(index%2?900:1450,t,3.5);
+  }
+  changeChord(0);
+  const motifs=[
+    [392,523.25,466.16,392,311.13,349.23,392],
+    [349.23,466.16,523.25,466.16,392,349.23,311.13],
+    [466.16,587.33,523.25,466.16,392,466.16,523.25],
+    [349.23,392,466.16,523.25,466.16,392,349.23]
+  ];
+  let elapsed=0;barIndex=0;melodyIndex=0;
+  // Slow chord changes, spacious piano-like notes and long crescendos—no drum groove.
   musicTimer=window.setInterval(()=>{
     if(!soundEnabled||audioContext.state!=='running')return;
-    const step=musicStep++,bar=Math.floor(step/16)%4,beat=step%16,t=audioContext.currentTime+.025;
-    if(beat===0){
-      chords[bar].forEach((f,i)=>voice(f,4.65,{type:i===0?'triangle':'sawtooth',volume:i===0?.11:.045,cutoff:bar===2?2600:1900,when:t}));
-      voice(bass[bar],4.7,{type:'sine',volume:.25,cutoff:180,when:t});
+    elapsed++;
+    if(elapsed%8===0){barIndex=(barIndex+1)%4;changeChord(barIndex);}
+    if(elapsed%3===0){
+      const motif=motifs[barIndex];
+      pianoNote(motif[melodyIndex%motif.length],audioContext.currentTime+.04);
+      melodyIndex++;
     }
-    // Deep trailer-style kick on each beat and restrained snare on beats 2 and 4.
-    if(beat%4===0)voice(90,.42,{type:'sine',volume:.38,end:38,cutoff:130,when:t});
-    if(beat===4||beat===12)noiseHit(.19,.11,1700,t);
-    if(beat%2===0)voice(arp[beat],.24,{type:'triangle',volume:.075,cutoff:3200,when:t});
-    if(beat===3||beat===7||beat===11||beat===15)voice(melody[beat],.48,{type:'sine',volume:.09,cutoff:4200,when:t});
-    if(beat===14)noiseHit(.32,.045,7000,t);
-  },stepMs);
+    if(elapsed%16===0){
+      const chord=progressions[barIndex];
+      cinematicVoice(chord.root,7,{type:'sine',volume:.22,cutoff:180,attack:2.8,release:3.2});
+      cinematicVoice(chord.top*2,6,{type:'sine',volume:.035,cutoff:2600,attack:2.5,release:3});
+    }
+  },1000);
 }
-function stopAmbientMusic(){if(musicTimer)clearInterval(musicTimer);musicTimer=null;musicNodes.forEach(n=>{try{n.stop();n.disconnect()}catch{}});musicNodes=[];}
+function stopAmbientMusic(){
+  if(musicTimer)clearInterval(musicTimer);musicTimer=null;
+  musicNodes.forEach(n=>{try{if(n.stop)n.stop();n.disconnect();}catch{}});
+  musicNodes=[];
+}
 function setSoundState(enabled){
   soundEnabled=enabled;if(!audioContext||!masterGain)return;
   if(enabled){
     startAmbientMusic();masterGain.gain.cancelScheduledValues(audioContext.currentTime);
-    masterGain.gain.setTargetAtTime(.92,audioContext.currentTime,.16);
+    masterGain.gain.setTargetAtTime(.88,audioContext.currentTime,.9);
     soundToggle.classList.add('is-on');soundToggle.setAttribute('aria-label','Disable sound');
     soundToggle.setAttribute('aria-pressed','true');soundToggle.querySelector('.audio-state').textContent='AUDIO ON';
   }else{
-    masterGain.gain.setTargetAtTime(0,audioContext.currentTime,.08);stopAmbientMusic();
+    masterGain.gain.setTargetAtTime(0,audioContext.currentTime,.15);stopAmbientMusic();
     soundToggle.classList.remove('is-on');soundToggle.setAttribute('aria-label','Enable sound');
     soundToggle.setAttribute('aria-pressed','false');soundToggle.querySelector('.audio-state').textContent='AUDIO OFF';
   }
@@ -97,10 +126,9 @@ async function unlockAndStart(){
   if(!audioUnlockPending||soundEnabled)return;
   ensureAudio();if(!audioContext)return;
   try{await audioContext.resume();if(audioContext.state==='running'){audioUnlockPending=false;setSoundState(true);}}
-  catch(error){/* Browser will retry on the next user gesture. */}
+  catch(error){}
 }
-// Attempt immediately on page load. If autoplay is blocked, start automatically
-// on the first ordinary interaction—no separate AUDIO button click is needed.
+// Try autoplay on arrival; if the browser blocks it, begin on the first ordinary gesture.
 soundToggle.querySelector('.audio-state').textContent='AUDIO STARTING';
 ensureAudio();
 if(audioContext)audioContext.resume().then(()=>{if(audioContext.state==='running'){audioUnlockPending=false;setSoundState(true);}}).catch(()=>{});
@@ -112,10 +140,9 @@ soundToggle?.addEventListener('click',async()=>{
 });
 function playUiSound(kind){
   if(!soundEnabled||!audioContext||audioContext.state!=='running')return;
-  const bus=musicBus;
-  if(kind==='hover')voice(780,.055,{type:'sine',volume:.018,end:1050,bus});
-  else if(kind==='click'){voice(155,.12,{type:'triangle',volume:.075,end:65,bus});voice(1180,.055,{type:'sine',volume:.025,end:620,bus});}
-  else if(kind==='open'){voice(220,.2,{type:'triangle',volume:.055,end:440,bus});setTimeout(()=>voice(440,.25,{type:'sine',volume:.04,end:880,bus}),90);}
+  if(kind==='hover')cinematicVoice(880,.16,{type:'sine',volume:.012,cutoff:3000,attack:.01,release:.14});
+  else if(kind==='click')cinematicVoice(130,.22,{type:'triangle',volume:.045,cutoff:500,attack:.01,release:.2});
+  else if(kind==='open')cinematicVoice(392,.55,{type:'sine',volume:.035,cutoff:1800,attack:.08,release:.45});
 }
 document.addEventListener('pointerover',e=>{const t=e.target.closest('a,button,[role="button"]');if(t&&!t.matches('.audio-toggle'))playUiSound('hover');},{passive:true});
 document.addEventListener('click',e=>{const t=e.target.closest('a,button,[role="button"]');if(t&&!t.matches('.audio-toggle'))playUiSound(t.matches('.project-open')?'open':'click');});
