@@ -149,5 +149,5 @@ export default async function middleware(request) {
 
 export const config = {
   runtime: "nodejs",
-  matcher: ["/((?!api/|assets/|fonts/|.*\\.[^/]+$).*)"],
+  matcher: ["/((?!api/|assets/|fonts/|.*\\.(?:js|css|png|jpe?g|svg|webp|avif|woff2?|ttf|map|ico|xml|txt|webmanifest)$).*)"],
 };
