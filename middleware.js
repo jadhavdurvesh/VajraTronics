@@ -1,3 +1,5 @@
+import { next } from "@vercel/functions";
+
 /*
  * SENTINEL edge connector for VajraTronics.
  * Runs only on document/navigation requests; static assets are excluded by matcher.
@@ -29,11 +31,15 @@ function cookieHeader(value) {
   return `${COOKIE_NAME}=${value}; Path=/; Max-Age=86400; Secure; HttpOnly; SameSite=Lax`;
 }
 
-function continueRequest(setCookie) {
+function continueRequest(setCookie, status = "pass-through") {
   const headers = new Headers();
-  headers.set("x-middleware-next", "1");
   if (setCookie) headers.set("Set-Cookie", setCookie);
-  return new Response(null, { headers });
+  // Enable this header only while diagnosing a deployment; it reveals no credentials.
+  if (process.env.SENTINEL_DEBUG === "true") {
+    headers.set("X-SENTINEL-Middleware", "active");
+    headers.set("X-SENTINEL-Check", status);
+  }
+  return next({ headers });
 }
 
 function redirectToSentinel(challengePath, publicOrigin, setCookie) {
@@ -87,7 +93,7 @@ async function sentinelRequest(url, token, body) {
     },
     body: JSON.stringify(body),
     cache: "no-store",
-    signal: AbortSignal.timeout(1800),
+    signal: AbortSignal.timeout(6000),
   });
   if (!response.ok) throw new Error(`SENTINEL API HTTP ${response.status}`);
   return response.json();
@@ -100,7 +106,10 @@ export default async function middleware(request) {
   const siteId = process.env.SENTINEL_SITE_ID || DEFAULT_SITE_ID;
 
   // Never break public availability because an optional security service is misconfigured.
-  if (!apiOrigin || !ingestToken) return continueRequest();
+  if (!apiOrigin || !ingestToken) {
+    console.error("[SENTINEL] Middleware active but API URL or ingest token is missing.");
+    return continueRequest("", "unconfigured");
+  }
 
   let subjectRef = readCookie(request.headers.get("cookie"), COOKIE_NAME);
   let setCookie = "";
@@ -113,38 +122,46 @@ export default async function middleware(request) {
   const eventUrl = `${apiOrigin}/api/v1/events`;
   const decisionPayload = { site_id: siteId, subject_ref: subjectRef };
 
+  // First check whether this browser already has a restriction.
   try {
-    // Existing restrictions are enforced before any new detection logic.
-    let decision = await sentinelRequest(decisionUrl, ingestToken, decisionPayload);
+    const decision = await sentinelRequest(decisionUrl, ingestToken, decisionPayload);
     if (decision.restricted && decision.challenge_url) {
-      return redirectToSentinel(decision.challenge_url, publicOrigin, setCookie) || continueRequest(setCookie);
+      console.warn("[SENTINEL] Existing restriction enforced for this session.");
+      return redirectToSentinel(decision.challenge_url, publicOrigin, setCookie) || continueRequest(setCookie, "invalid-challenge-url");
     }
-
-    const signal = classifyProbe(new URL(request.url));
-    if (signal) {
-      await sentinelRequest(eventUrl, ingestToken, {
-        site_id: siteId,
-        event_type: signal.event_type,
-        severity: "high",
-        confirmed: false,
-        subject_ref: subjectRef,
-        summary: signal.summary,
-        source: "vercel-routing-middleware",
-        evidence: { detector: "request-url-signature", raw_request_stored: false },
-      });
-
-      // The backend policy requires repeated matching high-severity signals before restriction.
-      decision = await sentinelRequest(decisionUrl, ingestToken, decisionPayload);
-      if (decision.restricted && decision.challenge_url) {
-        return redirectToSentinel(decision.challenge_url, publicOrigin, setCookie) || continueRequest(setCookie);
-      }
-    }
-  } catch {
-    // Fail open on timeout/provider/database failure. Do not lock out legitimate traffic.
-    return continueRequest(setCookie);
+  } catch (error) {
+    // A failed restriction lookup must not prevent us from recording a new probe.
+    console.error("[SENTINEL] Restriction lookup failed:", error instanceof Error ? error.message : "unknown error");
   }
 
-  return continueRequest(setCookie);
+  const signal = classifyProbe(new URL(request.url));
+  if (!signal) return continueRequest(setCookie, "checked-no-signal");
+
+  try {
+    const event = await sentinelRequest(eventUrl, ingestToken, {
+      site_id: siteId,
+      event_type: signal.event_type,
+      severity: "high",
+      confirmed: false,
+      subject_ref: subjectRef,
+      summary: signal.summary,
+      source: "vercel-routing-middleware",
+      evidence: { detector: "request-url-signature", raw_request_stored: false },
+    });
+
+    console.info("[SENTINEL] Security signal submitted:", signal.event_type, "incident:", event.incident_id);
+
+    // The backend policy requires three matching high-severity signals within five minutes.
+    const decision = await sentinelRequest(decisionUrl, ingestToken, decisionPayload);
+    if (decision.restricted && decision.challenge_url) {
+      console.warn("[SENTINEL] Restriction created; redirecting the flagged session.");
+      return redirectToSentinel(decision.challenge_url, publicOrigin, setCookie) || continueRequest(setCookie, "invalid-challenge-url");
+    }
+    return continueRequest(setCookie, "signal-recorded");
+  } catch (error) {
+    console.error("[SENTINEL] Event submission or decision failed:", error instanceof Error ? error.message : "unknown error");
+    return continueRequest(setCookie, "api-unavailable");
+  }
 }
 
 export const config = {
