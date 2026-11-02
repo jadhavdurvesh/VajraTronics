@@ -57,7 +57,7 @@ The ingest token is server-side only. Never use a `VITE_` prefix, add it to clie
 - High-confidence SQL injection signatures in the URL/query string.
 - High-confidence script-injection signatures in the URL/query string.
 
-The middleware creates a random first-party HttpOnly session reference and sends only the event category, site ID, and opaque session reference to SENTINEL. It does **not** send the raw URL, query string, request body, IP address, or browser fingerprint. The backend's deterministic policy requires three matching high-severity signals within five minutes before restricting a session; confirmed signals can be restricted immediately, but this initial detector does not mark URL signatures as confirmed.
+The middleware creates a random first-party HttpOnly session reference. When a URL signature matches, it sends the event category, site ID, opaque session reference and bounded security evidence to SENTINEL: Vercel's `x-forwarded-for` client IP, User-Agent, HTTP method, URL path without query string, Vercel request ID, and country/region/city/continent/timezone when provided. It does **not** send the raw query string, request body, postal code, GPS coordinates or browser fingerprint. IP-derived geolocation is approximate and may describe a VPN/proxy/network egress point rather than a person's physical location. The backend's deterministic policy requires three matching high-severity signals within five minutes before restricting a session; confirmed signals can be restricted immediately, but this initial detector does not mark URL signatures as confirmed.
 
 When SENTINEL returns a restriction, the middleware redirects only that session to the signed challenge at the SENTINEL origin. Normal traffic continues. If SENTINEL is unconfigured, unreachable, or times out, the middleware fails open so an API outage does not take VajraTronics offline.
 
@@ -92,3 +92,10 @@ This Vite site uses Vercel's framework-independent Routing Middleware through th
 The proxy checks an existing restriction, detects selected high-confidence URL probes, and submits the event. SENTINEL's event-ingestion API returns a signed challenge URL directly when an event creates a restriction, allowing the proxy to redirect without another decision request.
 
 For temporary verification only, set `SENTINEL_DEBUG=true` in the VajraTronics Vercel project. A document response should include `X-SENTINEL-Middleware: active` and an `X-SENTINEL-Check` status. Disable the variable after testing. Check the Vercel deployment summary for the `proxy.js` entrypoint and Routing Middleware status.
+
+
+## Incident evidence collected
+
+Evidence is collected only when a configured detector matches a suspicious request. The Vercel `x-forwarded-for` header is documented as the public client IP; Vercel overwrites it unless an Enterprise Trusted Proxy is configured. Vercel's `x-vercel-ip-*` headers provide IP-derived country, region, city, continent and timezone. This is network metadata, not identity or GPS. See [Vercel request headers](https://vercel.com/docs/headers/request-headers).
+
+The protected-site proxy does not include query strings or request bodies in stored incident evidence. IP and User-Agent data are security telemetry; use them only for incident investigation, limit access to administrators, set a retention period, and never infer a person's name or home address from an IP.
