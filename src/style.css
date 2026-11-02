@@ -120,3 +120,31 @@ body{overflow-x:hidden}
 @media(prefers-reduced-motion:no-preference){
   html{scroll-behavior:smooth}
 }
+
+
+/* VAJRA // audio control */
+.audio-toggle{
+  position:fixed;right:28px;bottom:26px;z-index:80;
+  display:flex;align-items:center;gap:11px;
+  min-height:42px;padding:0 14px;
+  border:1px solid rgba(255,92,53,.55);
+  background:rgba(9,11,11,.88);color:var(--paper-bright);
+  font:8px/1 var(--mono);letter-spacing:.12em;
+  backdrop-filter:blur(10px);cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.audio-toggle:hover,.audio-toggle.is-on{
+  border-color:var(--orange);color:var(--orange);
+  background:rgba(25,15,12,.94);
+}
+.audio-indicator{height:14px;display:flex;align-items:center;gap:2px}
+.audio-indicator i{display:block;width:2px;height:4px;background:var(--orange);opacity:.55}
+.audio-toggle.is-on .audio-indicator i{opacity:1;animation:audio-wave .75s ease-in-out infinite alternate}
+.audio-toggle.is-on .audio-indicator i:nth-child(2){animation-delay:.18s}
+.audio-toggle.is-on .audio-indicator i:nth-child(3){animation-delay:.34s}
+.audio-toggle.is-on .audio-indicator i:nth-child(4){animation-delay:.1s}
+.audio-toggle:focus-visible{outline:1px solid var(--orange);outline-offset:4px}
+.audio-toggle:disabled{opacity:.5;cursor:not-allowed}
+@keyframes audio-wave{from{height:3px}to{height:13px}}
+@media(max-width:600px){.audio-toggle{right:18px;bottom:18px;min-height:38px;padding:0 11px}}
+@media(prefers-reduced-motion:reduce){.audio-toggle.is-on .audio-indicator i{animation:none;height:6px}}
