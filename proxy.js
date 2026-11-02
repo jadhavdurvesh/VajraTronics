@@ -66,6 +66,39 @@ function diagnosticCode(error, stage) {
   return `${stage}-network-error`;
 }
 
+
+function safeHeader(request, name, max = 180) {
+  const value = request.headers.get(name);
+  if (!value) return null;
+  return value.replace(/[\\u0000-\\u001f\\u007f]/g, "").slice(0, max);
+}
+
+function securityEvidence(request, url, signal) {
+  const forwarded = safeHeader(request, "x-forwarded-for", 180);
+  const clientIp = forwarded ? forwarded.split(",")[0].trim().slice(0, 64) : null;
+  const rawCity = safeHeader(request, "x-vercel-ip-city", 100);
+  let city = rawCity;
+  try { if (rawCity) city = decodeURIComponent(rawCity).slice(0, 100); } catch {}
+  return {
+    detector: "request-url-signature",
+    signature: signal.event_type,
+    raw_request_stored: false,
+    request_method: request.method,
+    request_path: url.pathname.slice(0, 500),
+    client_ip: clientIp,
+    client_ip_source: clientIp ? "vercel-x-forwarded-for" : null,
+    user_agent: safeHeader(request, "user-agent", 300),
+    geo: {
+      country: safeHeader(request, "x-vercel-ip-country", 2),
+      region: safeHeader(request, "x-vercel-ip-country-region", 8),
+      city,
+      continent: safeHeader(request, "x-vercel-ip-continent", 2),
+      timezone: safeHeader(request, "x-vercel-ip-timezone", 80),
+    },
+    edge_request_id: safeHeader(request, "x-vercel-id", 200),
+  };
+}
+
 function classifyProbe(url) {
   let path = url.pathname;
   let search = url.search;
@@ -155,7 +188,7 @@ export default async function middleware(request) {
       subject_ref: subjectRef,
       summary: signal.summary,
       source: "vercel-routing-middleware",
-      evidence: { detector: "request-url-signature", raw_request_stored: false },
+      evidence: securityEvidence(request, new URL(request.url), signal),
     });
 
     console.info("[SENTINEL] Security signal submitted:", signal.event_type, "incident:", event.incident_id);
