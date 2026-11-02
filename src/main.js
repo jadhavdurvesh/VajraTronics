@@ -113,9 +113,11 @@ dialog.querySelector('.dialog-close').addEventListener('click', closeDialog);
 dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) closeDialog(); } });
 dialog.addEventListener('close', () => { document.body.classList.remove('dialog-open'); dialogTrigger?.focus(); });
 
-if (matchMedia('(pointer:fine)').matches && !reduceMotion) {
+if (matchMedia('(hover:hover) and (pointer:fine)').matches && !reduceMotion) {
   const cursor = document.querySelector('.cursor');
-  const trail = Array.from({ length: 4 }, (_, index) => {
+  const cursorLabel = cursor?.querySelector('.cursor-label');
+  // Two lightweight trail points are enough to retain the tracking effect.
+  const trail = Array.from({ length: 2 }, (_, index) => {
     const dot = document.createElement('i');
     dot.className = 'cursor-trail';
     dot.dataset.trail = String(index + 1);
@@ -123,21 +125,24 @@ if (matchMedia('(pointer:fine)').matches && !reduceMotion) {
     return dot;
   });
 
-  let trailX = 0;
-  let trailY = 0;
-  let lastPointerX = innerWidth / 2;
-  let lastPointerY = innerHeight / 2;
+  let pointerX = innerWidth / 2;
+  let pointerY = innerHeight / 2;
+  let frameRequested = false;
+
+  const renderCursor = () => {
+    const position = `translate3d(${pointerX}px, ${pointerY}px, 0) translate(-50%, -50%)`;
+    cursor.style.transform = position;
+    trail.forEach(dot => { dot.style.transform = position; });
+    frameRequested = false;
+  };
 
   const moveCursor = event => {
-    lastPointerX = event.clientX;
-    lastPointerY = event.clientY;
-    cursor.style.left = `${lastPointerX}px`;
-    cursor.style.top = `${lastPointerY}px`;
-    trail.forEach((dot, index) => {
-      dot.style.left = `${lastPointerX}px`;
-      dot.style.top = `${lastPointerY}px`;
-      dot.style.setProperty('--trail-delay', `${(index + 1) * 35}ms`);
-    });
+    pointerX = event.clientX;
+    pointerY = event.clientY;
+    if (!frameRequested) {
+      frameRequested = true;
+      requestAnimationFrame(renderCursor);
+    }
   };
   addEventListener('pointermove', moveCursor, { passive: true });
 
@@ -156,13 +161,13 @@ if (matchMedia('(pointer:fine)').matches && !reduceMotion) {
     const target = event.target.closest('a,button,[role="button"]');
     if (!target) return;
     cursor.classList.add('active', 'target-locked');
-    cursor.dataset.label = getTargetLabel(target);
+    if (cursorLabel) cursorLabel.dataset.label = getTargetLabel(target);
   });
   document.addEventListener('pointerout', event => {
     const target = event.target.closest('a,button,[role="button"]');
     if (!target || target.contains(event.relatedTarget)) return;
     cursor.classList.remove('active', 'target-locked');
-    cursor.dataset.label = '';
+    if (cursorLabel) cursorLabel.dataset.label = '';
   });
 
   document.addEventListener('pointerdown', () => {
