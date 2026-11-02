@@ -31,3 +31,9 @@ main,footer{position:relative;z-index:2}section{position:relative;padding:120px 
 .dialog-project-link{display:flex;align-items:center;justify-content:space-between;gap:24px;width:fit-content;max-width:100%;margin:0 0 28px;padding:15px 18px;border:1px solid var(--orange);color:var(--orange);font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-decoration:none;transition:background .2s,color .2s}.dialog-project-link:hover{background:var(--orange);color:var(--ink)}.dialog-project-link[hidden]{display:none}.dialog-project-link svg{width:17px;flex-shrink:0}
 
 .project-actions{display:flex;align-items:center;gap:clamp(18px,2.5vw,38px);flex-wrap:wrap}.project-actions .text-link{width:auto;gap:24px;white-space:nowrap}.project-actions .text-link span{display:inline-block}.project-actions .rudra-experience-link{color:var(--orange);border-color:var(--orange);text-decoration:none}.project-actions .rudra-experience-link:hover{color:var(--paper-bright);border-color:var(--paper-bright)}@media(max-width:600px){.project-actions{align-items:flex-start;flex-direction:column;gap:18px}.project-actions .text-link{width:100%;gap:20px}}
+
+
+/* Use the custom cursor on desktop without showing the native pointer underneath. */
+@media (hover:hover) and (pointer:fine){
+  html,body,body *{cursor:none!important}
+}
