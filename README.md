@@ -33,6 +33,40 @@ The public site runs without Supabase credentials. Contact submissions require a
 ## Vercel deployment
 Import this GitHub repository into the separate Vercel account you intend to use. Vercel should detect Vite. Build command: `npm run build`; output directory: `dist`. Configure the Supabase environment variables and deploy.
 
+
+## SENTINEL edge protection
+
+VajraTronics includes a framework-independent Vercel Routing Middleware connector in `middleware.js`. It runs before the static-site response is served and protects document/navigation requests while skipping the built asset directories and common static file extensions.
+
+### Vercel environment variables
+
+Configure these on the **VajraTronics Vercel project** under Settings → Environment Variables (Production and Preview as appropriate):
+
+| Variable | Value |
+|---|---|
+| `SENTINEL_API_URL` | `https://project-sentinel-ivory.vercel.app` |
+| `SENTINEL_PUBLIC_ORIGIN` | `https://project-sentinel-ivory.vercel.app` |
+| `SENTINEL_SITE_ID` | `vajratronics` |
+| `SENTINEL_INGEST_TOKEN` | The same secret configured as `SENTINEL_INGEST_TOKEN` on the SENTINEL backend |
+
+The ingest token is server-side only. Never use a `VITE_` prefix, add it to client code, or commit its value.
+
+### What the first integration detects
+
+- Sensitive-path discovery: `/.env`, `/.git/config`, `/wp-config.php`, `/.htpasswd`, `/actuator/env`, `/etc/passwd`, and `/server-status`.
+- High-confidence SQL injection signatures in the URL/query string.
+- High-confidence script-injection signatures in the URL/query string.
+
+The middleware creates a random first-party HttpOnly session reference and sends only the event category, site ID, and opaque session reference to SENTINEL. It does **not** send the raw URL, query string, request body, IP address, or browser fingerprint. The backend's deterministic policy requires three matching high-severity signals within five minutes before restricting a session; confirmed signals can be restricted immediately, but this initial detector does not mark URL signatures as confirmed.
+
+When SENTINEL returns a restriction, the middleware redirects only that session to the signed challenge at the SENTINEL origin. Normal traffic continues. If SENTINEL is unconfigured, unreachable, or times out, the middleware fails open so an API outage does not take VajraTronics offline.
+
+### Scope and limits
+
+This first layer is a conservative URL/path probe detector, not a complete WAF. It cannot inspect POST bodies in a static Vite deployment, block volumetric DDoS traffic, or identify every vulnerability. Protect APIs and form handlers at their own server/edge boundary, and add a managed WAF such as Cloudflare for broader rules and DDoS protections. It deliberately does not treat Developer Tools, page source, normal navigation, or ordinary query words as attacks.
+
+After adding the environment variables, redeploy VajraTronics. Test with a staging/preview deployment first; repeated probe URLs can trigger a short restriction for that browser session.
+
 ## Before production
 - Replace stock imagery with real prototype, team and lab photography.
 - Verify project descriptions and milestone statuses with the team.
