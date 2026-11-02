@@ -174,19 +174,26 @@ export default async function middleware(request) {
   };
 
   // First check whether this browser already has a restriction.
+  // Preserve an explicit, credential-free diagnostic for the no-signal path.
+  let decisionStatus = "decision-not-checked";
   try {
-    const decision = await sentinelRequest(decisionUrl, ingestToken, decisionPayload);
+    const decision = await sentinelRequest(decisionUrl, ingestToken, {
+      ...decisionPayload,
+      site_path: requestUrl.pathname.slice(0, 500),
+    });
+    decisionStatus = "decision-ok";
     if (decision.restricted && decision.challenge_url) {
       console.warn("[SENTINEL] Existing restriction enforced for this session.");
       return redirectToSentinel(decision.challenge_url, publicOrigin, setCookie) || continueRequest(setCookie, "invalid-challenge-url");
     }
   } catch (error) {
     // A failed restriction lookup must not prevent us from recording a new probe.
-    console.error("[SENTINEL] Restriction lookup failed:", error instanceof Error ? error.message : "unknown error");
+    decisionStatus = diagnosticCode(error, "decision");
+    console.error("[SENTINEL] Restriction lookup failed:", decisionStatus);
   }
 
-  const signal = classifyProbe(new URL(request.url));
-  if (!signal) return continueRequest(setCookie, "checked-no-signal");
+  const signal = classifyProbe(requestUrl);
+  if (!signal) return continueRequest(setCookie, decisionStatus);
 
   try {
     const event = await sentinelRequest(eventUrl, ingestToken, {
