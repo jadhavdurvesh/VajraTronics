@@ -151,11 +151,10 @@ export default async function middleware(request) {
 
     console.info("[SENTINEL] Security signal submitted:", signal.event_type, "incident:", event.incident_id);
 
-    // The backend policy requires three matching high-severity signals within five minutes.
-    const decision = await sentinelRequest(decisionUrl, ingestToken, decisionPayload);
-    if (decision.restricted && decision.challenge_url) {
+    // The event endpoint returns a signed URL if this signal creates a restriction.
+    if (event.restriction_created && event.challenge_url) {
       console.warn("[SENTINEL] Restriction created; redirecting the flagged session.");
-      return redirectToSentinel(decision.challenge_url, publicOrigin, setCookie) || continueRequest(setCookie, "invalid-challenge-url");
+      return redirectToSentinel(event.challenge_url, publicOrigin, setCookie) || continueRequest(setCookie, "invalid-challenge-url");
     }
     return continueRequest(setCookie, "signal-recorded");
   } catch (error) {
