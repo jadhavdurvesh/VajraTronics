@@ -7,6 +7,135 @@ gsap.registerPlugin(ScrollTrigger);
 const iconSet = { Menu, X, ArrowDownRight, ArrowUpRight, ArrowUp, Plus, Activity, Radio, ChartNoAxesCombined, ScanLine, Route, Flame };
 const refreshIcons = () => createIcons({ icons: iconSet, attrs: { 'stroke-width': 1.5 } });
 refreshIcons();
+ 
+// VAJRA // original procedural ambience + interface sound design.
+// Audio starts only after an explicit user gesture (browser autoplay policy).
+const soundToggle = document.querySelector('.audio-toggle');
+let audioContext = null;
+let masterGain = null;
+let musicBus = null;
+let musicNodes = [];
+let soundEnabled = false;
+let musicStepTimer = null;
+let musicStep = 0;
+
+function ensureAudio() {
+  if (audioContext) return;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    soundToggle.disabled = true;
+    soundToggle.querySelector('.audio-state').textContent = 'AUDIO UNAVAILABLE';
+    return;
+  }
+  audioContext = new AudioContextClass();
+  masterGain = audioContext.createGain();
+  masterGain.gain.value = 0;
+  masterGain.connect(audioContext.destination);
+  musicBus = audioContext.createGain();
+  musicBus.gain.value = 0.22;
+  musicBus.connect(masterGain);
+}
+
+function tone({frequency=440, duration=.12, type='sine', volume=.035, endFrequency=null, destination=masterGain}={}) {
+  if (!audioContext || !destination) return;
+  const now = audioContext.currentTime;
+  const oscillator = audioContext.createOscillator();
+  const envelope = audioContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, now);
+  if (endFrequency) oscillator.frequency.exponentialRampToValueAtTime(Math.max(1,endFrequency), now+duration);
+  envelope.gain.setValueAtTime(.0001, now);
+  envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume), now+.012);
+  envelope.gain.exponentialRampToValueAtTime(.0001, now+duration);
+  oscillator.connect(envelope); envelope.connect(destination);
+  oscillator.start(now); oscillator.stop(now+duration+.025);
+}
+
+function startAmbientMusic() {
+  if (!audioContext || musicNodes.length) return;
+  const now = audioContext.currentTime;
+  const filter = audioContext.createBiquadFilter();
+  filter.type = 'lowpass'; filter.frequency.value = 520; filter.Q.value = .7;
+  const padGain = audioContext.createGain(); padGain.gain.value = .24;
+  filter.connect(padGain); padGain.connect(musicBus);
+  // Original, slow-moving minor-key pad; no external music or copyrighted samples.
+  [55, 82.41, 110, 164.81].forEach((frequency, index) => {
+    const osc = audioContext.createOscillator();
+    const voice = audioContext.createGain();
+    osc.type = index === 0 ? 'triangle' : 'sine';
+    osc.frequency.value = frequency;
+    voice.gain.value = index === 0 ? .24 : .075;
+    osc.connect(voice); voice.connect(filter); osc.start();
+    musicNodes.push(osc, voice);
+  });
+  const pulse = audioContext.createOscillator();
+  const pulseGain = audioContext.createGain();
+  pulse.type = 'sine'; pulse.frequency.value = .075;
+  pulseGain.gain.value = 115;
+  pulse.connect(pulseGain); pulseGain.connect(filter.frequency); pulse.start();
+  musicNodes.push(pulse,pulseGain,filter,padGain);
+  const notes = [110,130.81,146.83,98,110,164.81,146.83,130.81];
+  musicStep = 0;
+  musicStepTimer = window.setInterval(() => {
+    if (!soundEnabled || !audioContext) return;
+    const note = notes[musicStep++ % notes.length];
+    tone({frequency:note*2,duration:1.8,type:'sine',volume:.012,endFrequency:note*2.015,destination:musicBus});
+  }, 2200);
+}
+
+function stopAmbientMusic() {
+  if (musicStepTimer) window.clearInterval(musicStepTimer);
+  musicStepTimer = null;
+  musicNodes.forEach(node => { try { if (node.stop) node.stop(); node.disconnect(); } catch {} });
+  musicNodes = [];
+}
+
+function playUiSound(kind) {
+  if (!soundEnabled || !audioContext || audioContext.state !== 'running') return;
+  if (kind === 'hover') {
+    tone({frequency:720,duration:.045,type:'sine',volume:.012,endFrequency:880});
+  } else if (kind === 'click') {
+    tone({frequency:185,duration:.085,type:'triangle',volume:.035,endFrequency:92});
+    tone({frequency:980,duration:.045,type:'sine',volume:.012,endFrequency:620});
+  } else if (kind === 'open') {
+    tone({frequency:260,duration:.18,type:'sine',volume:.025,endFrequency:520});
+    window.setTimeout(() => tone({frequency:520,duration:.22,type:'sine',volume:.018,endFrequency:780}), 75);
+  }
+}
+
+soundToggle?.addEventListener('click', async () => {
+  ensureAudio();
+  if (!audioContext) return;
+  await audioContext.resume();
+  soundEnabled = !soundEnabled;
+  if (soundEnabled) {
+    startAmbientMusic();
+    masterGain.gain.cancelScheduledValues(audioContext.currentTime);
+    masterGain.gain.setTargetAtTime(.72, audioContext.currentTime, .18);
+    soundToggle.classList.add('is-on');
+    soundToggle.setAttribute('aria-label','Disable sound');
+    soundToggle.setAttribute('aria-pressed','true');
+    soundToggle.querySelector('.audio-state').textContent = 'SOUND ON';
+    playUiSound('open');
+  } else {
+    masterGain.gain.setTargetAtTime(0, audioContext.currentTime, .12);
+    stopAmbientMusic();
+    soundToggle.classList.remove('is-on');
+    soundToggle.setAttribute('aria-label','Enable sound');
+    soundToggle.setAttribute('aria-pressed','false');
+    soundToggle.querySelector('.audio-state').textContent = 'SOUND OFF';
+  }
+});
+
+document.addEventListener('pointerover', event => {
+  const target = event.target.closest('a,button,[role="button"]');
+  if (target && !target.matches('.audio-toggle')) playUiSound('hover');
+}, {passive:true});
+document.addEventListener('click', event => {
+  const target = event.target.closest('a,button,[role="button"]');
+  if (target && !target.matches('.audio-toggle')) playUiSound(target.matches('.project-open') ? 'open' : 'click');
+});
+
 
 const captureMode = new URLSearchParams(location.search).has('t');
 const boot = document.querySelector('.boot');
