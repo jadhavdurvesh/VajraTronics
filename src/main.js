@@ -32,7 +32,7 @@ function ensureAudio() {
   masterGain.gain.value = 0;
   masterGain.connect(audioContext.destination);
   musicBus = audioContext.createGain();
-  musicBus.gain.value = 0.22;
+  musicBus.gain.value = 0.78;
   musicBus.connect(masterGain);
 }
 
@@ -56,15 +56,15 @@ function startAmbientMusic() {
   const now = audioContext.currentTime;
   const filter = audioContext.createBiquadFilter();
   filter.type = 'lowpass'; filter.frequency.value = 520; filter.Q.value = .7;
-  const padGain = audioContext.createGain(); padGain.gain.value = .24;
+  const padGain = audioContext.createGain(); padGain.gain.value = .52;
   filter.connect(padGain); padGain.connect(musicBus);
   // Original, slow-moving minor-key pad; no external music or copyrighted samples.
-  [55, 82.41, 110, 164.81].forEach((frequency, index) => {
+  [55, 82.41, 110, 164.81, 220, 329.63].forEach((frequency, index) => {
     const osc = audioContext.createOscillator();
     const voice = audioContext.createGain();
     osc.type = index === 0 ? 'triangle' : 'sine';
     osc.frequency.value = frequency;
-    voice.gain.value = index === 0 ? .24 : .075;
+    voice.gain.value = index === 0 ? .2 : (index < 4 ? .11 : .055);
     osc.connect(voice); voice.connect(filter); osc.start();
     musicNodes.push(osc, voice);
   });
@@ -111,11 +111,11 @@ soundToggle?.addEventListener('click', async () => {
   if (soundEnabled) {
     startAmbientMusic();
     masterGain.gain.cancelScheduledValues(audioContext.currentTime);
-    masterGain.gain.setTargetAtTime(.72, audioContext.currentTime, .18);
+    masterGain.gain.setTargetAtTime(.82, audioContext.currentTime, .18);
     soundToggle.classList.add('is-on');
     soundToggle.setAttribute('aria-label','Disable sound');
     soundToggle.setAttribute('aria-pressed','true');
-    soundToggle.querySelector('.audio-state').textContent = 'SOUND ON';
+    soundToggle.querySelector('.audio-state').textContent = 'AUDIO ON';
     playUiSound('open');
   } else {
     masterGain.gain.setTargetAtTime(0, audioContext.currentTime, .12);
@@ -123,7 +123,7 @@ soundToggle?.addEventListener('click', async () => {
     soundToggle.classList.remove('is-on');
     soundToggle.setAttribute('aria-label','Enable sound');
     soundToggle.setAttribute('aria-pressed','false');
-    soundToggle.querySelector('.audio-state').textContent = 'SOUND OFF';
+    soundToggle.querySelector('.audio-state').textContent = 'AUDIO OFF';
   }
 });
 
