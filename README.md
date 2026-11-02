@@ -83,3 +83,12 @@ This Vite project uses the framework-independent Vercel Routing Middleware entry
 When an event reaches the restriction threshold, SENTINEL's event endpoint now returns the signed `challenge_url` directly. The proxy can redirect immediately without making a second decision request.
 
 After these source changes, wait for Vercel's new production deployment to become Ready. In the deployment summary, verify that `proxy.js` is listed as a Routing Middleware/Proxy entrypoint. With `SENTINEL_DEBUG=true`, response headers `X-SENTINEL-Middleware: active` and `X-SENTINEL-Check` provide temporary diagnostics; remove or disable this variable after testing.
+
+
+### Vercel Routing Middleware deployment
+
+This Vite site uses Vercel's framework-independent Routing Middleware through the explicit `proxy.entrypoint` and `proxy.matcher` settings in root `vercel.json`. The entrypoint is root-level `proxy.js` and continues ordinary requests using `next()` from the `@vercel/functions` package. The previous root `middleware.js` convention is not used by this non-Next.js setup.
+
+The middleware checks an existing restriction, detects selected high-confidence URL probes, and submits the event. SENTINEL's event-ingestion API returns a signed challenge URL directly if that event creates a restriction, so the proxy does not need a second decision request.
+
+For temporary verification only, configure `SENTINEL_DEBUG=true` in Vercel. A protected document response should then include `X-SENTINEL-Middleware: active` and an `X-SENTINEL-Check` status. Disable this variable after testing. See the Vercel deployment summary for the `proxy.js` entrypoint and Routing Middleware status.
