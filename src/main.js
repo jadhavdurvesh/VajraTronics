@@ -8,23 +8,18 @@ const iconSet = { Menu, X, ArrowDownRight, ArrowUpRight, ArrowUp, Plus, Activity
 const refreshIcons = () => createIcons({ icons: iconSet, attrs: { 'stroke-width': 1.5 } });
 refreshIcons();
  
-// VAJRA // original procedural ambience + interface sound design.
-// Audio starts only after an explicit user gesture (browser autoplay policy).
+// VAJRA // original cinematic-industrial soundtrack + interface sound design.
+// Browsers block audible autoplay. Start on the first real page interaction.
 const soundToggle = document.querySelector('.audio-toggle');
-let audioContext = null;
-let masterGain = null;
-let musicBus = null;
-let musicNodes = [];
-let soundEnabled = false;
-let musicStepTimer = null;
-let musicStep = 0;
+let audioContext = null, masterGain = null, musicBus = null;
+let musicNodes = [], soundEnabled = false, musicTimer = null, musicStep = 0;
 
 function ensureAudio() {
   if (audioContext) return;
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) {
     soundToggle.disabled = true;
-    soundToggle.querySelector('.audio-state').textContent = 'AUDIO UNAVAILABLE';
+    soundToggle.querySelector('.audio-state').textContent = 'AUDIO N/A';
     return;
   }
   audioContext = new AudioContextClass();
@@ -32,111 +27,134 @@ function ensureAudio() {
   masterGain.gain.value = 0;
   masterGain.connect(audioContext.destination);
   musicBus = audioContext.createGain();
-  musicBus.gain.value = 0.78;
+  musicBus.gain.value = .9;
   musicBus.connect(masterGain);
 }
 
-function tone({frequency=440, duration=.12, type='sine', volume=.035, endFrequency=null, destination=masterGain}={}) {
+function tone({frequency=440,duration=.15,type='sine',volume=.04,endFrequency=null,destination=masterGain,when=null}={}) {
   if (!audioContext || !destination) return;
-  const now = audioContext.currentTime;
+  const now = when ?? audioContext.currentTime;
   const oscillator = audioContext.createOscillator();
   const envelope = audioContext.createGain();
   oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, now);
-  if (endFrequency) oscillator.frequency.exponentialRampToValueAtTime(Math.max(1,endFrequency), now+duration);
-  envelope.gain.setValueAtTime(.0001, now);
-  envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume), now+.012);
-  envelope.gain.exponentialRampToValueAtTime(.0001, now+duration);
+  oscillator.frequency.setValueAtTime(frequency,now);
+  if (endFrequency) oscillator.frequency.exponentialRampToValueAtTime(Math.max(1,endFrequency),now+duration);
+  envelope.gain.setValueAtTime(.0001,now);
+  envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),now+.018);
+  envelope.gain.exponentialRampToValueAtTime(.0001,now+duration);
   oscillator.connect(envelope); envelope.connect(destination);
-  oscillator.start(now); oscillator.stop(now+duration+.025);
+  oscillator.start(now); oscillator.stop(now+duration+.03);
 }
 
 function startAmbientMusic() {
   if (!audioContext || musicNodes.length) return;
-  const now = audioContext.currentTime;
-  const filter = audioContext.createBiquadFilter();
-  filter.type = 'lowpass'; filter.frequency.value = 520; filter.Q.value = .7;
-  const padGain = audioContext.createGain(); padGain.gain.value = .52;
-  filter.connect(padGain); padGain.connect(musicBus);
-  // Original, slow-moving minor-key pad; no external music or copyrighted samples.
-  [55, 82.41, 110, 164.81, 220, 329.63].forEach((frequency, index) => {
-    const osc = audioContext.createOscillator();
-    const voice = audioContext.createGain();
-    osc.type = index === 0 ? 'triangle' : 'sine';
-    osc.frequency.value = frequency;
-    voice.gain.value = index === 0 ? .2 : (index < 4 ? .11 : .055);
-    osc.connect(voice); voice.connect(filter); osc.start();
-    musicNodes.push(osc, voice);
+  const now=audioContext.currentTime;
+  // Wide, warm chord bed with a filtered saw layer: more soundtrack, less pure drone.
+  const padFilter=audioContext.createBiquadFilter();
+  padFilter.type='lowpass'; padFilter.frequency.value=1250; padFilter.Q.value=.55;
+  const padGain=audioContext.createGain(); padGain.gain.value=.18;
+  padFilter.connect(padGain); padGain.connect(musicBus);
+  const chord=[130.81,155.56,196,233.08]; // C minor colour
+  chord.forEach((frequency,index)=>{
+    const osc=audioContext.createOscillator(), voice=audioContext.createGain();
+    osc.type=index===0?'triangle':'sawtooth';
+    osc.frequency.value=frequency;
+    voice.gain.value=index===0?.12:.035;
+    osc.connect(voice); voice.connect(padFilter); osc.start(now);
+    musicNodes.push(osc,voice);
   });
-  const pulse = audioContext.createOscillator();
-  const pulseGain = audioContext.createGain();
-  pulse.type = 'sine'; pulse.frequency.value = .075;
-  pulseGain.gain.value = 115;
-  pulse.connect(pulseGain); pulseGain.connect(filter.frequency); pulse.start();
-  musicNodes.push(pulse,pulseGain,filter,padGain);
-  const notes = [110,130.81,146.83,98,110,164.81,146.83,130.81];
-  musicStep = 0;
-  musicStepTimer = window.setInterval(() => {
-    if (!soundEnabled || !audioContext) return;
-    const note = notes[musicStep++ % notes.length];
-    tone({frequency:note*2,duration:1.8,type:'sine',volume:.012,endFrequency:note*2.015,destination:musicBus});
-  }, 2200);
+  const sub=audioContext.createOscillator(), subGain=audioContext.createGain();
+  sub.type='sine'; sub.frequency.value=65.41; subGain.gain.value=.12;
+  sub.connect(subGain); subGain.connect(musicBus); sub.start(now);
+  musicNodes.push(sub,subGain,padFilter,padGain);
+
+  // A measured 100 BPM pulse: bass thump, bright arpeggio and soft metallic ticks.
+  const scale=[261.63,311.13,392,466.16,523.25,466.16,392,311.13,349.23,392,466.16,523.25,587.33,523.25,466.16,392];
+  musicStep=0;
+  musicTimer=window.setInterval(()=>{
+    if(!soundEnabled||!audioContext||audioContext.state!=='running') return;
+    const t=audioContext.currentTime+.025;
+    const step=musicStep++%16;
+    if(step%4===0) tone({frequency:92,duration:.28,type:'sine',volume:.17,endFrequency:42,destination:musicBus,when:t});
+    if(step%4===2) tone({frequency:165,duration:.12,type:'triangle',volume:.035,endFrequency:95,destination:musicBus,when:t});
+    tone({frequency:scale[step],duration:.24,type:'triangle',volume:.055,endFrequency:scale[step]*.997,destination:musicBus,when:t});
+    if(step%2===1) tone({frequency:1450,duration:.035,type:'square',volume:.008,endFrequency:900,destination:musicBus,when:t});
+  },150);
 }
 
 function stopAmbientMusic() {
-  if (musicStepTimer) window.clearInterval(musicStepTimer);
-  musicStepTimer = null;
-  musicNodes.forEach(node => { try { if (node.stop) node.stop(); node.disconnect(); } catch {} });
-  musicNodes = [];
+  if(musicTimer) window.clearInterval(musicTimer);
+  musicTimer=null;
+  musicNodes.forEach(node=>{try{if(node.stop)node.stop();node.disconnect();}catch{}});
+  musicNodes=[];
 }
 
-function playUiSound(kind) {
-  if (!soundEnabled || !audioContext || audioContext.state !== 'running') return;
-  if (kind === 'hover') {
-    tone({frequency:720,duration:.045,type:'sine',volume:.012,endFrequency:880});
-  } else if (kind === 'click') {
-    tone({frequency:185,duration:.085,type:'triangle',volume:.035,endFrequency:92});
-    tone({frequency:980,duration:.045,type:'sine',volume:.012,endFrequency:620});
-  } else if (kind === 'open') {
-    tone({frequency:260,duration:.18,type:'sine',volume:.025,endFrequency:520});
-    window.setTimeout(() => tone({frequency:520,duration:.22,type:'sine',volume:.018,endFrequency:780}), 75);
-  }
-}
-
-soundToggle?.addEventListener('click', async () => {
-  ensureAudio();
-  if (!audioContext) return;
-  await audioContext.resume();
-  soundEnabled = !soundEnabled;
-  if (soundEnabled) {
+function setSoundState(enabled) {
+  soundEnabled=enabled;
+  if(!audioContext||!masterGain) return;
+  if(enabled) {
     startAmbientMusic();
     masterGain.gain.cancelScheduledValues(audioContext.currentTime);
-    masterGain.gain.setTargetAtTime(.82, audioContext.currentTime, .18);
+    masterGain.gain.setTargetAtTime(.9,audioContext.currentTime,.12);
     soundToggle.classList.add('is-on');
     soundToggle.setAttribute('aria-label','Disable sound');
     soundToggle.setAttribute('aria-pressed','true');
-    soundToggle.querySelector('.audio-state').textContent = 'AUDIO ON';
-    playUiSound('open');
+    soundToggle.querySelector('.audio-state').textContent='AUDIO ON';
   } else {
-    masterGain.gain.setTargetAtTime(0, audioContext.currentTime, .12);
+    masterGain.gain.setTargetAtTime(0,audioContext.currentTime,.08);
     stopAmbientMusic();
     soundToggle.classList.remove('is-on');
     soundToggle.setAttribute('aria-label','Enable sound');
     soundToggle.setAttribute('aria-pressed','false');
-    soundToggle.querySelector('.audio-state').textContent = 'AUDIO OFF';
+    soundToggle.querySelector('.audio-state').textContent='AUDIO OFF';
   }
+}
+
+async function enableSoundFromGesture() {
+  ensureAudio();
+  if(!audioContext||soundEnabled) return;
+  try {
+    await audioContext.resume();
+    setSoundState(true);
+  } catch(error) {
+    soundToggle.querySelector('.audio-state').textContent='TAP AUDIO';
+  }
+}
+
+// Default intent is ON. Browser policy requires the first click/key/tap to unlock audio.
+soundToggle?.setAttribute('aria-label','Enable sound');
+soundToggle?.setAttribute('aria-pressed','false');
+if(soundToggle) soundToggle.querySelector('.audio-state').textContent='AUDIO READY';
+document.addEventListener('pointerdown',event=>{
+  if(!event.target.closest('.audio-toggle')) enableSoundFromGesture();
+},{once:true,passive:true});
+document.addEventListener('keydown',()=>enableSoundFromGesture(),{once:true});
+soundToggle?.addEventListener('click',async()=>{
+  ensureAudio();
+  if(!audioContext) return;
+  try { await audioContext.resume(); setSoundState(!soundEnabled); }
+  catch(error) { soundToggle.querySelector('.audio-state').textContent='TAP TO RETRY'; }
 });
 
-document.addEventListener('pointerover', event => {
-  const target = event.target.closest('a,button,[role="button"]');
-  if (target && !target.matches('.audio-toggle')) playUiSound('hover');
-}, {passive:true});
-document.addEventListener('click', event => {
-  const target = event.target.closest('a,button,[role="button"]');
-  if (target && !target.matches('.audio-toggle')) playUiSound(target.matches('.project-open') ? 'open' : 'click');
+function playUiSound(kind) {
+  if(!soundEnabled||!audioContext||audioContext.state!=='running') return;
+  if(kind==='hover') tone({frequency:740,duration:.05,type:'sine',volume:.009,endFrequency:930});
+  else if(kind==='click') {
+    tone({frequency:190,duration:.11,type:'triangle',volume:.045,endFrequency:78});
+    tone({frequency:1040,duration:.05,type:'sine',volume:.018,endFrequency:650});
+  } else if(kind==='open') {
+    tone({frequency:240,duration:.2,type:'triangle',volume:.035,endFrequency:480});
+    window.setTimeout(()=>tone({frequency:480,duration:.24,type:'sine',volume:.025,endFrequency:720}),85);
+  }
+}
+document.addEventListener('pointerover',event=>{
+  const target=event.target.closest('a,button,[role="button"]');
+  if(target&&!target.matches('.audio-toggle')) playUiSound('hover');
+},{passive:true});
+document.addEventListener('click',event=>{
+  const target=event.target.closest('a,button,[role="button"]');
+  if(target&&!target.matches('.audio-toggle')) playUiSound(target.matches('.project-open')?'open':'click');
 });
-
-
 const captureMode = new URLSearchParams(location.search).has('t');
 const boot = document.querySelector('.boot');
 if (captureMode) boot.classList.add('done');
