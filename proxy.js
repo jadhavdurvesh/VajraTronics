@@ -96,6 +96,7 @@ function securityEvidence(request, url, signal) {
       timezone: safeHeader(request, "x-vercel-ip-timezone", 80),
     },
     edge_request_id: safeHeader(request, "x-vercel-id", 200),
+    site_path: requestUrl.pathname.slice(0, 500),
   };
 }
 
