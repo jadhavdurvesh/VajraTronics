@@ -23,7 +23,7 @@ function ensureAudio(){
   compressor.attack.value=.04;compressor.release.value=.5;
   masterGain=audioContext.createGain();masterGain.gain.value=0;
   masterGain.connect(compressor);compressor.connect(audioContext.destination);
-  musicBus=audioContext.createGain();musicBus.gain.value=.9;musicBus.connect(masterGain);
+  musicBus=audioContext.createGain();musicBus.gain.value=.42;musicBus.connect(masterGain);
 }
 function addNode(node){musicNodes.push(node);return node;}
 function cinematicVoice(freq,duration,{type='sine',volume=.08,cutoff=2400,detune=0,when=null,attack=.8,release=1.5}={}){
@@ -44,7 +44,7 @@ function pianoNote(freq,when){
   const t=when??audioContext.currentTime;
   const osc=audioContext.createOscillator(),amp=audioContext.createGain(),filter=audioContext.createBiquadFilter();
   osc.type='sine';osc.frequency.value=freq;filter.type='lowpass';filter.frequency.value=1900;
-  amp.gain.setValueAtTime(.0001,t);amp.gain.exponentialRampToValueAtTime(.12,t+.025);
+  amp.gain.setValueAtTime(.0001,t);amp.gain.exponentialRampToValueAtTime(.035,t+.06);
   amp.gain.exponentialRampToValueAtTime(.0001,t+3.8);
   osc.connect(filter);filter.connect(amp);amp.connect(musicBus);osc.start(t);osc.stop(t+3.9);
   musicNodes.push(osc,amp,filter);
@@ -59,18 +59,18 @@ function startAmbientMusic(){
     {root:58.27,notes:[116.54,146.83,174.61,233.08],top:349.23}
   ];
   const start=audioContext.currentTime;
-  const masterPad=addNode(audioContext.createGain());masterPad.gain.value=.7;masterPad.connect(musicBus);
+  const masterPad=addNode(audioContext.createGain());masterPad.gain.value=.24;masterPad.connect(musicBus);
   const lowpass=addNode(audioContext.createBiquadFilter());lowpass.type='lowpass';lowpass.frequency.value=1150;lowpass.Q.value=.5;lowpass.connect(masterPad);
   const voices=[];
   [0,1,2,3,4].forEach(i=>{
     const osc=addNode(audioContext.createOscillator()),amp=addNode(audioContext.createGain());
-    osc.type=i===0?'triangle':'sawtooth';amp.gain.value=i===0?.16:.035;
+    osc.type=i===0?'triangle':'sawtooth';amp.gain.value=i===0?.075:.012;
     osc.connect(amp);amp.connect(lowpass);osc.start(start);voices.push(osc);
   });
   const sub=addNode(audioContext.createOscillator()),subGain=addNode(audioContext.createGain());
-  sub.type='sine';sub.frequency.value=32.7;subGain.gain.value=.18;sub.connect(subGain);subGain.connect(musicBus);sub.start(start);
+  sub.type='sine';sub.frequency.value=32.7;subGain.gain.value=.045;sub.connect(subGain);subGain.connect(musicBus);sub.start(start);
   const shimmer=addNode(audioContext.createOscillator()),shimmerGain=addNode(audioContext.createGain()),shimmerFilter=addNode(audioContext.createBiquadFilter());
-  shimmer.type='sine';shimmer.frequency.value=.11;shimmerGain.gain.value=380;
+  shimmer.type='sine';shimmer.frequency.value=.11;shimmerGain.gain.value=85;
   shimmerFilter.type='lowpass';shimmerFilter.frequency.value=1100;
   shimmer.connect(shimmerGain);shimmerGain.connect(shimmerFilter.frequency);shimmerFilter.connect(masterPad);shimmer.start(start);
   function changeChord(index){
@@ -99,8 +99,8 @@ function startAmbientMusic(){
     }
     if(elapsed%16===0){
       const chord=progressions[barIndex];
-      cinematicVoice(chord.root,7,{type:'sine',volume:.22,cutoff:180,attack:2.8,release:3.2});
-      cinematicVoice(chord.top*2,6,{type:'sine',volume:.035,cutoff:2600,attack:2.5,release:3});
+      cinematicVoice(chord.root,7,{type:'sine',volume:.055,cutoff:180,attack:2.8,release:3.2});
+      cinematicVoice(chord.top*2,6,{type:'sine',volume:.012,cutoff:2600,attack:2.5,release:3});
     }
   },1000);
 }
@@ -113,7 +113,7 @@ function setSoundState(enabled){
   soundEnabled=enabled;if(!audioContext||!masterGain)return;
   if(enabled){
     startAmbientMusic();masterGain.gain.cancelScheduledValues(audioContext.currentTime);
-    masterGain.gain.setTargetAtTime(.88,audioContext.currentTime,.9);
+    masterGain.gain.setTargetAtTime(.32,audioContext.currentTime,1.8);
     soundToggle.classList.add('is-on');soundToggle.setAttribute('aria-label','Disable sound');
     soundToggle.setAttribute('aria-pressed','true');soundToggle.querySelector('.audio-state').textContent='AUDIO ON';
   }else{
@@ -140,9 +140,9 @@ soundToggle?.addEventListener('click',async()=>{
 });
 function playUiSound(kind){
   if(!soundEnabled||!audioContext||audioContext.state!=='running')return;
-  if(kind==='hover')cinematicVoice(880,.16,{type:'sine',volume:.012,cutoff:3000,attack:.01,release:.14});
-  else if(kind==='click')cinematicVoice(130,.22,{type:'triangle',volume:.045,cutoff:500,attack:.01,release:.2});
-  else if(kind==='open')cinematicVoice(392,.55,{type:'sine',volume:.035,cutoff:1800,attack:.08,release:.45});
+  if(kind==='hover')cinematicVoice(880,.16,{type:'sine',volume:.004,cutoff:3000,attack:.01,release:.14});
+  else if(kind==='click')cinematicVoice(130,.22,{type:'triangle',volume:.018,cutoff:500,attack:.01,release:.2});
+  else if(kind==='open')cinematicVoice(392,.55,{type:'sine',volume:.014,cutoff:1800,attack:.08,release:.45});
 }
 document.addEventListener('pointerover',e=>{const t=e.target.closest('a,button,[role="button"]');if(t&&!t.matches('.audio-toggle'))playUiSound('hover');},{passive:true});
 document.addEventListener('click',e=>{const t=e.target.closest('a,button,[role="button"]');if(t&&!t.matches('.audio-toggle'))playUiSound(t.matches('.project-open')?'open':'click');});
