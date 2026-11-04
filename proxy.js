@@ -48,6 +48,7 @@ function redirectToSentinel(challengePath, publicOrigin, setCookie) {
   if (target.origin !== expected.origin || target.pathname !== "/visitor" || !target.hash.startsWith("#challenge=")) {
     return null;
   }
+  target.pathname = "/sentinel-challenge";
   const headers = new Headers({
     Location: target.toString(),
     "Cache-Control": "no-store, no-cache, must-revalidate",
@@ -144,7 +145,7 @@ async function sentinelRequest(url, token, body) {
 
 export default async function middleware(request) {
   const apiOrigin = (process.env.SENTINEL_API_URL || "").replace(/\/$/, "");
-  const publicOrigin = process.env.SENTINEL_PUBLIC_ORIGIN || "https://project-sentinel-ivory.vercel.app";
+  const publicOrigin = new URL(request.url).origin;
   const ingestToken = process.env.SENTINEL_INGEST_TOKEN || "";
   const siteId = process.env.SENTINEL_SITE_ID || DEFAULT_SITE_ID;
 
