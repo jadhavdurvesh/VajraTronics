@@ -192,6 +192,34 @@ export default async function middleware(request) {
     console.error("[SENTINEL] Restriction lookup failed:", decisionStatus);
   }
 
+  // Enforce temporary SENTINEL IP deny rules for this protected site only.
+  // Vercel supplies x-forwarded-for at the trusted edge; never accept a browser-only custom IP header.
+  const forwardedFor = safeHeader(request, "x-forwarded-for", 180);
+  const verifiedClientIp = forwardedFor ? forwardedFor.split(",")[0].trim().slice(0, 64) : "";
+  if (verifiedClientIp) {
+    try {
+      const ipDecision = await sentinelRequest(`${apiOrigin}/api/v1/edge/ip-decision`, ingestToken, {
+        site_id: siteId,
+        client_ip: verifiedClientIp,
+      });
+      if (ipDecision.blocked === true) {
+        console.warn("[SENTINEL] Temporary site-scoped edge block enforced.");
+        return new Response("Access to this protected site is temporarily unavailable.", {
+          status: 403,
+          headers: {
+            "Cache-Control": "no-store",
+            "Referrer-Policy": "no-referrer",
+            ...(setCookie ? { "Set-Cookie": setCookie } : {}),
+          },
+        });
+      }
+    } catch (error) {
+      const status = diagnosticCode(error, "ip-decision");
+      console.error("[SENTINEL] Edge IP decision unavailable:", status);
+      // Fail open for availability; session-scoped restriction checks remain active.
+    }
+  }
+
   const signal = classifyProbe(requestUrl);
   if (!signal) return continueRequest(setCookie, decisionStatus);
 
