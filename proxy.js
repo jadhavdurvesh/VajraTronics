@@ -48,6 +48,7 @@ function redirectToSentinel(challengePath, publicOrigin, setCookie) {
   if (target.origin !== expected.origin || target.pathname !== "/visitor" || !target.hash.startsWith("#challenge=")) {
     return null;
   }
+  target.pathname = "/sentinel-challenge";
   const headers = new Headers({
     Location: target.toString(),
     "Cache-Control": "no-store, no-cache, must-revalidate",
