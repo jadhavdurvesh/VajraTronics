@@ -2,9 +2,26 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "proxy": {
     "entrypoint": "proxy.js",
-    "matcher": ["/((?!api/|assets/|fonts/|.*\\.(?:js|css|png|jpe?g|svg|webp|avif|woff2?|ttf|map|ico|xml|txt|webmanifest)$).*)"]
+    "matcher": [
+      "/((?!api/|sentinel-challenge/?$|visitor/|assets/|fonts/|.*\\.(?:js|css|png|jpe?g|svg|webp|avif|woff2?|ttf|map|ico|xml|txt|webmanifest)$).*)"
+    ]
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/sentinel-challenge",
+      "destination": "https://project-sentinel-ivory.vercel.app/visitor"
+    },
+    {
+      "source": "/visitor/(.*)",
+      "destination": "https://project-sentinel-ivory.vercel.app/visitor/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://project-sentinel-ivory.vercel.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
